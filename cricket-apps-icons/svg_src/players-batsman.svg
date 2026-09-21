@@ -1,0 +1,21 @@
+<svg
+  xmlns="http://www.w3.org/2000/svg"
+  width="24"
+  height="24"
+  viewBox="0 0 24 24"
+  fill="none"
+  stroke="currentColor"
+  stroke-width="1.7"
+  stroke-linecap="round"
+  stroke-linejoin="round"
+>
+  <circle cx="6.3" cy="5" r="2" />
+  <path d="M6.3 7v6" />
+  <path d="M6.3 13 3.3 20.5" />
+  <path d="M6.3 13 8.8 20.5" />
+  <path d="M6.3 9 10.5 7" />
+  <g transform="rotate(-22 13 6)">
+    <rect x="11.6" y="1.8" width="3" height="7.2" rx="1.1" />
+    <line x1="13" y1="9" x2="13" y2="13.5" />
+  </g>
+</svg>
