@@ -34,13 +34,19 @@ export function TeamsScreen({ matches, stats: propStats, setScreen }: TeamsScree
         ),
       ).sort()
     : []
-  const selectedMatches = matches.filter(
-    (match) =>
-      (match.teamOne === selectedTeam || match.teamTwo === selectedTeam) &&
-      (!selectedOpponent ||
-        match.teamOne === selectedOpponent ||
-        match.teamTwo === selectedOpponent),
-  )
+  const selectedMatches = matches
+    .filter(
+      (match) =>
+        (match.teamOne === selectedTeam || match.teamTwo === selectedTeam) &&
+        (!selectedOpponent ||
+          match.teamOne === selectedOpponent ||
+          match.teamTwo === selectedOpponent),
+    )
+    .sort((a, b) => {
+      const timeA = Date.parse(a.savedAt)
+      const timeB = Date.parse(b.savedAt)
+      return (Number.isNaN(timeB) ? 0 : timeB) - (Number.isNaN(timeA) ? 0 : timeA)
+    })
   const selectedMatch = selectedMatches[teamHistoryIndex] ?? selectedMatches[0] ?? null
   const filteredTeams = filterTeams(teamStats, search)
 
@@ -256,9 +262,10 @@ export function TeamsScreen({ matches, stats: propStats, setScreen }: TeamsScree
               </div>
               <button
                 className="close-player-popup"
+                aria-label="Close"
                 onClick={() => setSelectedTeam(null)}
               >
-                ×
+                <Icon name="x" size={16} />
               </button>
             </section>
           </div>

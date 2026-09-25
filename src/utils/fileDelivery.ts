@@ -1,5 +1,5 @@
 import { Capacitor } from '@capacitor/core'
-import { Filesystem, Directory } from '@capacitor/filesystem'
+import { Filesystem, Directory, Encoding } from '@capacitor/filesystem'
 import { Share } from '@capacitor/share'
 
 export interface DeliverFileOptions {
@@ -47,15 +47,31 @@ export async function deliverFile(options: DeliverFileOptions): Promise<void> {
   // Native Android / iOS delivery
   try {
     let cleanData = content
-    if (isBase64 && cleanData.includes(',')) {
-      cleanData = cleanData.split(',')[1] ?? ''
+    if (isBase64) {
+      if (cleanData.includes(',')) {
+        cleanData = cleanData.split(',')[1] ?? ''
+      }
+      cleanData = cleanData.replace(/\s/g, '')
     }
 
-    const writeResult = await Filesystem.writeFile({
+    const writeOptions: {
+      path: string
+      data: string
+      directory: Directory
+      recursive: boolean
+      encoding?: Encoding
+    } = {
       path: filename,
       data: cleanData,
       directory: Directory.Cache,
-    })
+      recursive: true,
+    }
+
+    if (!isBase64) {
+      writeOptions.encoding = Encoding.UTF8
+    }
+
+    const writeResult = await Filesystem.writeFile(writeOptions)
 
     await Share.share({
       title: filename,

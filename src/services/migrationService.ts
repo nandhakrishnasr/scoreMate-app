@@ -91,6 +91,17 @@ export async function migrateLocalStorageToIndexedDB(
             }
             await matchRepository.saveMatch(record)
             result.matchesMigrated++
+          } else {
+            const updated: PersistedMatchRecord = {
+              ...existing,
+              score: item.secondInningsScore ?? existing.score,
+              firstInningsScore: item.firstInningsScore ?? existing.firstInningsScore,
+              matchResult: item.result ?? existing.matchResult,
+              teamOne: item.teamOne || existing.teamOne,
+              teamTwo: item.teamTwo || existing.teamTwo,
+              updatedAt: item.savedAt || existing.updatedAt,
+            }
+            await matchRepository.saveMatch(updated)
           }
         }
       }

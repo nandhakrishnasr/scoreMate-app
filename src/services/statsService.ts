@@ -436,13 +436,18 @@ export function aggregatePlayerStats(matches: CompletedMatch[]): PlayerStat[] {
         seenThisMatch.add(batter.name)
       }
       for (const bowler of innings.bowlerStats) {
-        const record = records.get(bowler.name) ?? createEmptyPlayerStat(bowler.name)
-        record.wickets += bowler.wickets
-        record.bowlingBalls += bowler.balls
-        record.runsConceded += bowler.runs
-        record.maidens += countMaidens(innings, bowler.name)
-        records.set(bowler.name, record)
-        seenThisMatch.add(bowler.name)
+        const bowlerName = bowler.name.trim()
+        if (!bowlerName) continue
+        const record = records.get(bowlerName) ?? createEmptyPlayerStat(bowlerName)
+        record.wickets += bowler.wickets ?? 0
+        record.bowlingBalls += bowler.balls ?? 0
+        record.runsConceded += bowler.runs ?? 0
+        record.maidens += (bowler.maidens !== undefined ? bowler.maidens : countMaidens(innings, bowler.name))
+        record.wides += bowler.wides ?? 0
+        record.noBalls += bowler.noBalls ?? 0
+        record.dotBalls += bowler.dotBalls ?? 0
+        records.set(bowlerName, record)
+        seenThisMatch.add(bowlerName)
       }
     }
 
@@ -455,30 +460,43 @@ export function aggregatePlayerStats(matches: CompletedMatch[]): PlayerStat[] {
       if (!innings) continue
       for (const batter of innings.battingStats) {
         if (!batter.out || !batter.dismissal) continue
-        const caught = batter.dismissal.match(/^c\s+&\s+b\s+(.+)/i)
-        const caughtAgain = batter.dismissal.match(/^c\s+([^\s]+)\s+b\s+(.+)/i)
-        const stumped = batter.dismissal.match(/^st\s+([^\s]+)\s+b\s+(.+)/i)
-        const runOut = batter.dismissal.match(/^run\s+out\s+\(([^)]+)\)/i)
-        if (caught) {
-          const bowler = caught[1]
+        const dismissal = batter.dismissal.trim()
+        const caughtAndBowled = dismissal.match(/^c\s+&\s+b\s+(.+)$/i)
+        const caughtByFielder = dismissal.match(/^c\s+(.+?)\s+b\s+(.+)$/i)
+        const caughtOnly = dismissal.match(/^c\s+([^&].+?)$/i)
+        const stumped = dismissal.match(/^st\s+(.+?)(?:\s+b\s+(.+))?$/i)
+        const runOut = dismissal.match(/^run\s+out(?:\s*\((.+?)\))?/i)
+        if (caughtAndBowled) {
+          const bowler = caughtAndBowled[1].trim()
           const record = records.get(bowler) ?? createEmptyPlayerStat(bowler)
           record.catches += 1
           records.set(bowler, record)
-        } else if (caughtAgain) {
-          const fielder = caughtAgain[1]
+        } else if (caughtByFielder) {
+          const fielder = caughtByFielder[1].trim()
+          const record = records.get(fielder) ?? createEmptyPlayerStat(fielder)
+          record.catches += 1
+          records.set(fielder, record)
+        } else if (caughtOnly) {
+          const fielder = caughtOnly[1].trim()
           const record = records.get(fielder) ?? createEmptyPlayerStat(fielder)
           record.catches += 1
           records.set(fielder, record)
         } else if (stumped) {
-          const keeper = stumped[1]
+          const keeper = stumped[1].trim()
           const record = records.get(keeper) ?? createEmptyPlayerStat(keeper)
           record.stumpings += 1
           records.set(keeper, record)
         } else if (runOut) {
-          const helper = runOut[1]
-          const record = records.get(helper) ?? createEmptyPlayerStat(helper)
-          record.runOuts += 1
-          records.set(helper, record)
+          if (runOut[1]) {
+            const helpers = runOut[1].split(/[/,/]/)
+            for (const helper of helpers) {
+              const trimmed = helper.trim()
+              if (!trimmed) continue
+              const record = records.get(trimmed) ?? createEmptyPlayerStat(trimmed)
+              record.runOuts += 1
+              records.set(trimmed, record)
+            }
+          }
         }
       }
     }

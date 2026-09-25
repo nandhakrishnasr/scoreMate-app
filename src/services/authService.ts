@@ -74,6 +74,12 @@ export function mapAuthError(err: unknown): string {
       if (message.includes('16') || message.includes('Account reauth failed')) {
         return 'Google Sign-In failed [16]. Please ensure the Android SHA-1 fingerprint is registered in Firebase Console.'
       }
+      if (message.includes('format of the phone number') || message.includes('E.164')) {
+        return 'Please enter a valid phone number with country code (e.g. +91 98765 43210).'
+      }
+      if (message.includes('BILLING_NOT_ENABLED') || message.includes('billing')) {
+        return 'Phone authentication requires enabling Phone Provider or adding test numbers in Firebase Console.'
+      }
       if (message.includes('offline') || message.includes('network')) {
         return 'Network error. Please verify your connection.'
       }
@@ -260,9 +266,13 @@ export const authService = {
       const result = await signInAnonymously(firebaseAuth)
       return formatFirebaseUser(result.user)!
     } catch (err) {
-      // If offline, do NOT fabricate a fake Firebase user; activate local offline guest
+      // If offline or anonymous auth is restricted/disabled, activate local offline guest
       const code = (err as { code?: string }).code
-      if (code === 'auth/network-request-failed' || !navigator.onLine) {
+      if (
+        code === 'auth/network-request-failed' ||
+        code === 'auth/admin-restricted-operation' ||
+        !navigator.onLine
+      ) {
         setOfflineGuestActive(true)
         return formatFirebaseUser(null, true)!
       }

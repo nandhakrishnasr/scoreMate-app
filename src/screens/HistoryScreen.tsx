@@ -17,6 +17,17 @@ export interface HistoryScreenProps {
   setScreen: (screen: Screen) => void
 }
 
+function formatMatchResult(winner: string, margin?: string): string {
+  if (winner === 'Match Drawn') return 'Match Drawn'
+  if (!margin) return `${winner} won`
+  const trimmed = margin.trim()
+  const lower = trimmed.toLowerCase()
+  if (lower.startsWith(winner.toLowerCase())) return trimmed
+  if (lower.startsWith('won by')) return `${winner} ${trimmed}`
+  if (lower.startsWith('by ')) return `${winner} won ${trimmed}`
+  return `${winner} won by ${trimmed}`
+}
+
 export function HistoryScreen({
   matches,
   onBack,
@@ -62,6 +73,7 @@ export function HistoryScreen({
         if (payload.active) localStorage.setItem(ACTIVE_MATCH_KEY, payload.active)
         if (payload.completed) {
           localStorage.setItem(COMPLETED_MATCHES_KEY, JSON.stringify(payload.completed))
+          localStorage.removeItem('scoremate-localstorage-migrated-v1')
           onImport(payload.completed)
         }
         window.location.reload()
@@ -118,9 +130,7 @@ export function HistoryScreen({
                     {match.secondInningsScore?.runs ?? 0}/{match.secondInningsScore?.wickets ?? 0}
                   </strong>
                   <p>
-                    {match.result.winner === 'Match Drawn'
-                      ? 'Match Drawn'
-                      : `${match.result.winner} won ${match.result.margin ? `by ${match.result.margin}` : ''}`}
+                    {formatMatchResult(match.result.winner, match.result.margin)}
                   </p>
                 </div>
                 <div className="history-match-actions">

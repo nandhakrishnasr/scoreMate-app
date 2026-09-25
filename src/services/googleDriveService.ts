@@ -347,21 +347,27 @@ export interface GoogleDriveServiceOptions {
  * Authoritative transport client for Google Drive appDataFolder backup file.
  */
 export class GoogleDriveService {
-  private tokenProvider: OAuthTokenProvider
+  private customTokenProvider?: OAuthTokenProvider
   private fetchFn: typeof fetch
   private cachedFileMetadata: DriveFileMetadata | null = null
 
   constructor(options?: GoogleDriveServiceOptions) {
-    this.tokenProvider = options?.tokenProvider ?? createDefaultOAuthTokenProvider()
+    if (options?.tokenProvider) {
+      this.customTokenProvider = options.tokenProvider
+    }
     this.fetchFn = options?.fetchFn ?? globalThis.fetch.bind(globalThis)
   }
 
   setTokenProvider(provider: OAuthTokenProvider): void {
-    this.tokenProvider = provider
+    this.customTokenProvider = provider
   }
 
   getTokenProvider(): OAuthTokenProvider {
-    return this.tokenProvider
+    return this.customTokenProvider ?? createDefaultOAuthTokenProvider()
+  }
+
+  private get tokenProvider(): OAuthTokenProvider {
+    return this.getTokenProvider()
   }
 
   setFetch(fetchFn: typeof fetch): void {

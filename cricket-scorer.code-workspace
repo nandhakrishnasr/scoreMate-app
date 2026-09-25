@@ -5,6 +5,9 @@
 		},
 		{
 			"path": "../../AppData/Local/smabar"
+		},
+		{
+			"path": "../GitHub/scoreMate"
 		}
 	],
 	"settings": {}

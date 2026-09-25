@@ -26,7 +26,6 @@ import { THEME_KEY } from './services/storageService'
 import { resolveInitialTheme, applyTheme, type Theme } from './utils/theme'
 import { matchRepository } from './services/repositories/matchRepository'
 import { toCompletedMatch } from './types/database'
-import { exportMatchesToCsv } from './services/exportService'
 import { checkAndRunAutomaticBackup } from './services/autoBackupService'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import './index.css'
@@ -402,6 +401,7 @@ function AppContent() {
             firstBattingHome={firstBattingHome}
             firstInningsScore={firstInningsScore}
             startSecondInnings={startSecondInnings}
+            onEndMatch={() => { void handleEndMatch() }}
           />
         ) : undefined,
         'second-opening': (
@@ -544,10 +544,6 @@ function AppContent() {
               onReloadMatches={async () => {
                 const persisted = await matchRepository.listMatches({ status: 'completed' })
                 setCompletedMatches(persisted.map(toCompletedMatch))
-              }}
-              onExportCsv={() => exportMatchesToCsv(completedMatches)}
-              onExportImage={() => {
-                // image export will be handled by canvasService
               }}
             />
           )}

@@ -225,59 +225,68 @@ export function PlayersStatsScreen({
                 <div className="player-stat-detail-grid">
                   <div>
                     <span>Matches</span>
-                    <b>{player.matches}</b>
+                    <b>{player.matches ?? 0}</b>
                   </div>
                   <div>
                     <span>Overs</span>
                     <b>
-                      {player.overs
-                        ? `${Math.floor(player.overs)}.${Math.round((player.overs % 1) * 10)}`
-                        : '0.0'}
+                      {player.bowlingBalls
+                        ? `${Math.floor(player.bowlingBalls / 6)}.${player.bowlingBalls % 6}`
+                        : player.overs
+                          ? `${Math.floor(player.overs)}.${Math.round((player.overs % 1) * 6)}`
+                          : '0.0'}
                     </b>
                   </div>
                   <div>
                     <span>Maidens</span>
-                    <b>{player.maidens}</b>
+                    <b>{player.maidens ?? 0}</b>
                   </div>
                   <div>
                     <span>Wickets</span>
-                    <b>{player.wickets}</b>
+                    <b>{player.wickets ?? 0}</b>
                   </div>
                   <div>
                     <span>Runs</span>
-                    <b>{player.runsConceded}</b>
+                    <b>{player.runsConceded ?? 0}</b>
                   </div>
                   <div>
                     <span>Economy</span>
-                    <b>{player.economy ? player.economy.toFixed(2) : '0.00'}</b>
+                    <b>
+                      {(() => {
+                        const balls = player.bowlingBalls || Math.round((player.overs || 0) * 6)
+                        const ov = balls / 6
+                        if (ov > 0) return ((player.runsConceded ?? 0) / ov).toFixed(2)
+                        return player.economy ? player.economy.toFixed(2) : '0.00'
+                      })()}
+                    </b>
                   </div>
                   <div>
                     <span>Average</span>
                     <b>
-                      {player.wickets
-                        ? (player.runsConceded / player.wickets).toFixed(2)
+                      {(player.wickets ?? 0) > 0
+                        ? ((player.runsConceded ?? 0) / player.wickets).toFixed(2)
                         : '0.00'}
                     </b>
                   </div>
                   <div>
                     <span>Strike rate</span>
                     <b>
-                      {player.wickets
-                        ? ((player.overs * 6) / player.wickets).toFixed(2)
+                      {(player.wickets ?? 0) > 0
+                        ? ((player.bowlingBalls || Math.round((player.overs || 0) * 6)) / player.wickets).toFixed(2)
                         : '0.00'}
                     </b>
                   </div>
                   <div>
                     <span>Wides</span>
-                    <b>{player.wides}</b>
+                    <b>{player.wides ?? 0}</b>
                   </div>
                   <div>
                     <span>No balls</span>
-                    <b>{player.noBalls}</b>
+                    <b>{player.noBalls ?? 0}</b>
                   </div>
                   <div>
                     <span>Dot balls</span>
-                    <b>{player.dotBalls}</b>
+                    <b>{player.dotBalls ?? 0}</b>
                   </div>
                 </div>
               )}
@@ -285,31 +294,32 @@ export function PlayersStatsScreen({
                 <div className="player-stat-detail-grid">
                   <div>
                     <span>Matches</span>
-                    <b>{player.matches}</b>
+                    <b>{player.matches ?? 0}</b>
                   </div>
                   <div>
                     <span>Catches</span>
-                    <b>{player.catches}</b>
+                    <b>{player.catches ?? 0}</b>
                   </div>
                   <div>
                     <span>Run outs</span>
-                    <b>{player.runOuts}</b>
+                    <b>{player.runOuts ?? 0}</b>
                   </div>
                   <div>
                     <span>Stumpings</span>
-                    <b>{player.stumpings}</b>
+                    <b>{player.stumpings ?? 0}</b>
                   </div>
                   <div>
                     <span>Total dismissals</span>
-                    <b>{player.catches + player.runOuts + player.stumpings}</b>
+                    <b>{(player.catches ?? 0) + (player.runOuts ?? 0) + (player.stumpings ?? 0)}</b>
                   </div>
                 </div>
               )}
               <button
                 className="close-player-popup"
+                aria-label="Close"
                 onClick={() => setSelectedPlayer(null)}
               >
-                ×
+                <Icon name="x" size={16} />
               </button>
             </section>
           </div>

@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { Header } from '../components/common/Header'
 import { AuthModal } from '../components/modals/AuthModal'
 import { useAuth } from '../context/AuthContext'
-import type { PhoneOtpResult } from '../services/authService'
+import { mapAuthError, type PhoneOtpResult } from '../services/authService'
 import { normalizePhoneNumber } from '../utils/phoneUtils'
 import type { Screen } from '../types/match'
 
@@ -57,7 +57,7 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
       await signInWithEmail(email.trim(), password)
       setScreen(targetScreen)
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Sign-in failed.')
+      setErrorMessage(mapAuthError(err))
     } finally {
       setLoading(false)
     }
@@ -65,13 +65,21 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
 
   async function handleCreateAccount(createEmail: string, createPass: string) {
     setErrorMessage('')
-    await signUpWithEmail(createEmail, createPass)
-    setScreen(targetScreen)
+    try {
+      await signUpWithEmail(createEmail, createPass)
+      setScreen(targetScreen)
+    } catch (err: unknown) {
+      setErrorMessage(mapAuthError(err))
+    }
   }
 
   async function handleForgotPassword(resetEmail: string) {
     setErrorMessage('')
-    await sendPasswordReset(resetEmail)
+    try {
+      await sendPasswordReset(resetEmail)
+    } catch (err: unknown) {
+      setErrorMessage(mapAuthError(err))
+    }
   }
 
   async function handleSendOtp() {
@@ -87,7 +95,7 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
       setOtpResult(res)
       setResendCooldown(60)
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Failed to send OTP code.')
+      setErrorMessage(mapAuthError(err))
     } finally {
       setLoading(false)
     }
@@ -104,7 +112,7 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
       await verifyPhoneOtp(otpResult, otp.trim())
       setScreen(targetScreen)
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Invalid OTP.')
+      setErrorMessage(mapAuthError(err))
     } finally {
       setLoading(false)
     }
@@ -117,7 +125,7 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
       await signInWithGoogle()
       setScreen(targetScreen)
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Google sign-in failed.')
+      setErrorMessage(mapAuthError(err))
     } finally {
       setLoading(false)
     }
@@ -130,7 +138,7 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
       await signInWithApple()
       setScreen(targetScreen)
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Apple sign-in failed.')
+      setErrorMessage(mapAuthError(err))
     } finally {
       setLoading(false)
     }
@@ -143,7 +151,7 @@ export function LoginScreen({ setScreen, resumeScreen }: LoginScreenProps) {
       await continueAsGuest()
       setScreen(targetScreen)
     } catch (err: unknown) {
-      setErrorMessage(err instanceof Error ? err.message : 'Unable to continue as guest.')
+      setErrorMessage(mapAuthError(err))
     } finally {
       setLoading(false)
     }

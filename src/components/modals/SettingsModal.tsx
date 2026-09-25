@@ -26,8 +26,6 @@ export interface SettingsModalProps {
   onClose: () => void
   exportBackup?: () => void
   onImport?: (event: ChangeEvent<HTMLInputElement>) => void
-  onExportCsv?: () => void
-  onExportImage?: () => void
   onReloadMatches?: () => void | Promise<void>
 }
 

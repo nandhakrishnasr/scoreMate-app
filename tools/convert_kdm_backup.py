@@ -102,10 +102,60 @@ def convert(database: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
         if inning_id:
             bowling_by_inning[inning_id].append(row)
 
+    def parse_wickets(val: Any) -> int:
+        if isinstance(val, str) and not val.strip().isdigit():
+            return len([w for w in val.split(",") if w.strip()])
+        return number(val)
+
+    def format_dismissal(w: dict[str, Any] | None, row: dict[str, Any]) -> str:
+        out_type = number(w.get("outType") if w else row.get("outType"), -1)
+        if out_type == 1:
+            fielder = player_name(players, w.get("whoHelpedId")) if w and w.get("whoHelpedId") else None
+            bowler = player_name(players, w.get("bowlerId")) if w and w.get("bowlerId") else None
+            if fielder and bowler and fielder != bowler:
+                return f"c {fielder} b {bowler}"
+            elif bowler:
+                return f"c & b {bowler}"
+            elif fielder:
+                return f"c {fielder}"
+            return "Caught"
+        elif out_type == 0:
+            bowler = player_name(players, w.get("bowlerId")) if w and w.get("bowlerId") else None
+            return f"b {bowler}" if bowler else "Bowled"
+        elif out_type == 2:
+            fielder = player_name(players, w.get("whoHelpedId")) if w and w.get("whoHelpedId") else None
+            return f"run out ({fielder})" if fielder else "run out"
+        elif out_type == 3:
+            bowler = player_name(players, w.get("bowlerId")) if w and w.get("bowlerId") else None
+            return f"lbw b {bowler}" if bowler else "lbw"
+        elif out_type == 4:
+            keeper = player_name(players, w.get("whoHelpedId")) if w and w.get("whoHelpedId") else None
+            bowler = player_name(players, w.get("bowlerId")) if w and w.get("bowlerId") else None
+            if keeper and bowler:
+                return f"st {keeper} b {bowler}"
+            elif keeper:
+                return f"st {keeper}"
+            elif bowler:
+                return f"st b {bowler}"
+            return "Stumped"
+        elif out_type == 6:
+            bowler = player_name(players, w.get("bowlerId")) if w and w.get("bowlerId") else None
+            return f"hit wicket b {bowler}" if bowler else "hit wicket"
+        elif out_type == 99:
+            return "Retired Out"
+        return "Out"
+
     wickets_by_inning: dict[str, list[dict[str, Any]]] = defaultdict(list)
+    wickets_by_batting_id: dict[str, dict[str, Any]] = {}
+    wickets_by_inning_batter: dict[tuple[str, str], dict[str, Any]] = {}
     for row in database.get("Wickets", []):
-        if not is_deleted(row) and row.get("inningId"):
-            wickets_by_inning[str(row["inningId"])].append(row)
+        if not is_deleted(row):
+            if row.get("inningId"):
+                wickets_by_inning[str(row["inningId"])].append(row)
+            if row.get("battingStatId"):
+                wickets_by_batting_id[str(row["battingStatId"])] = row
+            if row.get("inningId") and row.get("outBatsmanId"):
+                wickets_by_inning_batter[(str(row["inningId"]), str(row["outBatsmanId"]))] = row
 
     def make_innings(rows: list[dict[str, Any]], match: dict[str, Any]) -> list[dict[str, Any]]:
         result = []
@@ -127,7 +177,8 @@ def convert(database: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
                     "out": out,
                 }
                 if out:
-                    batter["dismissal"] = str(row.get("outType") or "Out")
+                    w = wickets_by_batting_id.get(str(row.get("documentId"))) or wickets_by_inning_batter.get((inning_id, str(row.get("playerId"))))
+                    batter["dismissal"] = format_dismissal(w, row)
                     score["dismissedBatters"].append(batter["name"])
                 score["battingStats"].append(batter)
 
@@ -137,7 +188,11 @@ def convert(database: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
                     "name": player_name(players, row.get("playerId")),
                     "balls": number(row.get("legalBalls") or row.get("balls")),
                     "runs": number(row.get("runs")),
-                    "wickets": number(row.get("wickets")),
+                    "wickets": parse_wickets(row.get("wickets")),
+                    "maidens": number(row.get("maidens")),
+                    "wides": number(row.get("wides")),
+                    "noBalls": number(row.get("noBalls")),
+                    "dotBalls": number(row.get("noOfDots")),
                 })
 
             score["wickets"] = len(wickets_by_inning[inning_id]) or sum(1 for batter in score["battingStats"] if batter["out"])
@@ -151,7 +206,7 @@ def convert(database: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
                     "wicket": index,
                     "score": number(wicket.get("runs")),
                     "batter": player_name(players, wicket.get("outBatsmanId")),
-                    "dismissal": str(wicket.get("outDescription") or wicket.get("outType") or "Out"),
+                    "dismissal": format_dismissal(wicket, wicket),
                 })
             result.append((inning, score))
         return result
@@ -182,6 +237,7 @@ def convert(database: dict[str, list[dict[str, Any]]]) -> dict[str, Any]:
             "secondInningsScore": second[1],
             "result": {"winner": winner, "margin": str(match.get("resultDescription") or "")},
         })
+    completed.sort(key=lambda m: m["savedAt"], reverse=True)
     return {"active": None, "completed": completed}
 
 
