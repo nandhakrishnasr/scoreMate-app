@@ -3,7 +3,6 @@
 **Date:** September 14, 2026  
 **Status:** Approximately 60% Complete  
 **Application Identity:** "ScoreMate" (referred to in code and assets as "Gully Scorer" / `com.gullyscorer.app`)  
-**Repository Path:** `c:/Users/NANDHA KRISHNA/Documents/cricket-scorer`
 
 ---
 
@@ -19,15 +18,15 @@ While core scoring and UI flows are functional (~60% complete), the codebase con
 
 | Layer | Technologies / Libraries | Version / Details | Purpose |
 |---|---|---|---|
-| **Core UI Framework** | [React](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L23) / [React-DOM](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L24) | `^19.2.8` | Component rendering, hooks, state, context |
-| **Language** | [TypeScript](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L33) | `~6.0.2` | Static typing, interface contracts, domain models |
-| **Build & Dev Server** | [Vite](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L34) + [@vitejs/plugin-react](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L31) | `^8.2.2` / `^6.1.0` | Fast HMR dev server and production Rollup bundler |
-| **Mobile Runtime** | [Capacitor Core](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L20), [Android](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L18), [iOS](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L21), [CLI](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L19) | `^8.5.1` | Native Android (`android/`) and iOS (`ios/`) wrappers |
-| **Styling & Design System** | Vanilla CSS ([`src/index.css`](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/index.css)) | Custom CSS3 (~65 KB) | Glassmorphism, CSS custom properties (dark/light), Google Fonts (DM Sans, Space Grotesk), mobile shell container |
-| **Data Visualization** | [Recharts](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L25) | `^3.10.1` | Manhattan (runs per over) and Worm (cumulative runs) LineCharts |
-| **Document Generation** | [jsPDF](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L22) | `^4.2.1` | Client-side vector match scorecard PDF creation |
+| **Core UI Framework** | [React](package.json) / [React-DOM](package.json) | `^19.2.8` | Component rendering, hooks, state, context |
+| **Language** | [TypeScript](package.json) | `~6.0.2` | Static typing, interface contracts, domain models |
+| **Build & Dev Server** | [Vite](package.json) + [@vitejs/plugin-react](package.json) | `^8.2.2` / `^6.1.0` | Fast HMR dev server and production Rollup bundler |
+| **Mobile Runtime** | [Capacitor Core](package.json), [Android](package.json), [iOS](package.json), [CLI](package.json) | `^8.5.1` | Native Android (`android/`) and iOS (`ios/`) wrappers |
+| **Styling & Design System** | Vanilla CSS ([`src/index.css`](src/index.css)) | Custom CSS3 (~65 KB) | Glassmorphism, CSS custom properties (dark/light), Google Fonts (DM Sans, Space Grotesk), mobile shell container |
+| **Data Visualization** | [Recharts](package.json) | `^3.10.1` | Manhattan (runs per over) and Worm (cumulative runs) LineCharts |
+| **Document Generation** | [jsPDF](package.json) | `^4.2.1` | Client-side vector match scorecard PDF creation |
 | **Graphics & Social Share** | HTML5 Canvas 2D API & Web Share API | Browser Native | Scorecard PNG rendering & live over update image sharing |
-| **Linter** | [Oxlint](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/package.json#L32) | `^1.79.0` | Rust-based high-performance JavaScript/TypeScript linter |
+| **Linter** | [Oxlint](package.json) | `^1.79.0` | Rust-based high-performance JavaScript/TypeScript linter |
 | **Persistence** | Web Storage API (`localStorage`) | Browser Native | Active match, completed matches, theme, custom logos/photos, auth cache |
 | **Data Conversion Tools** | Python 3 + SQLite / SQLCipher scripts | Python 3.10+ | Extraction from legacy Android database (`com.kdm.scorer`) into JSON |
 
@@ -52,15 +51,15 @@ flowchart TD
     SCREENS --> SCORECARD_UI[Scorecard Screen]
     SCREENS --> RESULT_UI[Result Screen]
     SCREENS --> STATS_UI[Teams & Players Screen]
-    STATS_UI --> STATIC_DB[/public/full_database_export.json/]
+    STATS_UI --> STATIC_DB[/src/data/importedKdmHistory.ts/]
     RESULT_UI --> EXPORT_PDF[jsPDF Scorecard Download]
     RESULT_UI --> EXPORT_IMG[Canvas Scorecard PNG]
 ```
 
 ### Architectural Characteristics:
-- **Screen-Based State Routing:** No URL routing (no `react-router-dom`). A state enum `Screen` (`'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players'`) controls which screen component is rendered via [MatchRouter.tsx](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/components/MatchRouter.tsx).
-- **Two-Way State Bridge:** Match initialization and persistence are managed by [MatchContext.tsx](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/context/MatchContext.tsx), while delivery-by-delivery state mutation is isolated in [useScoring.ts](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts).
-- **Zero-Backend Client-Only Model:** Match histories and settings are written directly to `localStorage`. Team and player historical aggregates are hydrated on boot by fetching a static 50 MB JSON file (`public/full_database_export.json`).
+- **Screen-Based State Routing:** No URL routing (no `react-router-dom`). A state enum `Screen` (`'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players'`) controls which screen component is rendered via [MatchRouter.tsx](src/components/MatchRouter.tsx).
+- **Two-Way State Bridge:** Match initialization and persistence are managed by [MatchContext.tsx](src/context/MatchContext.tsx), while delivery-by-delivery state mutation is isolated in [useScoring.ts](src/hooks/useScoring.ts).
+- **Zero-Backend Client-Only Model:** Match histories and settings are written directly to `localStorage`. Team and player historical aggregates were originally hydrated on boot by fetching a static JSON file (the legacy database export has been removed; history is bundled in `src/data/importedKdmHistory.ts`).
 
 ---
 
@@ -71,7 +70,7 @@ cricket-scorer/
 ├── android/                         # Generated native Android Capacitor project (Gradle, Java/Kotlin)
 ├── ios/                             # Generated native iOS Capacitor project (Xcode, CocoaPods/SPM)
 ├── public/                          # Static assets copied directly to build output
-│   ├── full_database_export.json   # 50 MB historical SQLite database dump in JSON format
+│   ├── (legacy database export removed)
 │   ├── icons/                       # PNG icon assets (purple/white, 128px and 256px resolutions)
 │   ├── favicon.svg & icons.svg      # Favicon and vector sprite
 ├── src/                             # Application source code
@@ -154,15 +153,9 @@ erDiagram
 - `gully-scorer-theme`: `'dark'` | `'light'`.
 - `gully-scorer-auth`: Demo credentials `{ email, password }`.
 
-### 2. Static Relational Database (`public/full_database_export.json`)
+### 2. Static Relational Database (Legacy export - removed)
 - Derived from the SQLCipher-encrypted SQLite database of the earlier native app (`com.kdm.scorer`).
-- Size: ~50 MB JSON containing raw tables:
-  - `Players`: Player IDs and display names.
-  - `Teams`: Team IDs and names.
-  - `Matches`: Match records with participant IDs, winner, tie flag.
-  - `BattingStats`: Innings batting records (runs, balls faced, 4s, 6s, dots, out status).
-  - `BowlingStats`: Innings bowling figures (balls, maidens, wickets, runs, wides, no-balls).
-  - `FieldingStats`: Catches, stumpings, run outs.
+- The legacy static database export has been removed; historical match data is now bundled in `src/data/importedKdmHistory.ts`.
 - Ingested on app launch inside `App.tsx` via `loadTeamStatsFromDatabase()` and `loadPlayerStatsFromDatabase()`, computing career aggregates on the client.
 
 ---
@@ -173,7 +166,7 @@ erDiagram
 - **No REST/GraphQL Backend:** No server to store users, matches, or live games.
 - **No Live Cricket API:** No feeds from CricAPI, ESPNcricinfo, or Sportradar.
 - **Client-Side Web Platform APIs Utilized:**
-  1. `fetch('/full_database_export.json')`: Asynchronous local static asset loading.
+  1. Legacy database export loading: Asynchronous local static asset loading (the legacy database export has been removed).
   2. `localStorage`: Synchronous browser storage.
   3. `navigator.share()` / `navigator.canShare()`: Native OS share sheet for sharing generated over summaries.
   4. `HTMLCanvasElement.toDataURL('image/png')`: Dynamically paints scorecards and live over cards onto an offscreen 1200x630 canvas for PNG download.
@@ -275,13 +268,13 @@ erDiagram
 
 ### Critical Bugs:
 1. **App Reload Resets to Login Screen:**
-   - In [MatchContext.tsx (line 160)](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/context/MatchContext.tsx#L160), during state hydration from `localStorage`, it executes:
+   - In [MatchContext.tsx (line 160)](src/context/MatchContext.tsx), during state hydration from `localStorage`, it executes:
      ```ts
      setScreen('login')
      ```
      Refreshing the page during a live match drops the user out of the active scoring interface back to the login screen.
 2. **Bowler Spell Reset Bug:**
-   - In [useScoring.ts (line 91)](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L91):
+   - In [useScoring.ts (line 91)](src/hooks/useScoring.ts):
      ```ts
      function chooseNextBowler(name: string) {
        options.setScore({
@@ -293,7 +286,7 @@ erDiagram
      ```
      When a bowler returns for their 2nd or 3rd over, their previous balls, runs, and wickets are overwritten and a duplicate bowler row is appended to `bowlerStats`.
 3. **Odd Runs on Final Ball of Over Strike Swap Bug:**
-   - In [useScoring.ts (line 68)](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L68):
+   - In [useScoring.ts (line 68)](src/hooks/useScoring.ts):
      ```ts
      const overComplete = isLegal && updated.balls % 6 === 0
      if ((kind === 'runs' && value % 2 === 1 || overComplete) && updated.nonStriker.name)
@@ -301,7 +294,7 @@ erDiagram
      ```
      Because this uses a logical `||` (OR), if a single (1 run) is hit on ball 6, the expression evaluates to `true` once and only swaps batters once. In actual cricket, a single rotates strike (Swap 1), and then the end of over changes ends (Swap 2), netting **zero strike change**. The current code leaves the batter who took the single at the non-striker end.
 4. **50 MB Synchronous JSON Fetch in Mobile WebView:**
-   - In [App.tsx (lines 548–602, 604–716)](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/App.tsx#L548-L716), `public/full_database_export.json` is fetched and parsed into memory whenever `TeamsScreen` or `PlayersStatsScreen` mounts. On physical mobile devices, parsing a 50 MB JSON file locks the JavaScript thread, causing severe UI lag or app crashes.
+   - In [App.tsx (lines 548–602, 604–716)](src/App.tsx), the legacy database export was previously fetched and parsed into memory (this legacy export has been removed).
 
 ### Technical Debt & Code Smells:
 - **Massive Monolithic File:** `src/App.tsx` is 1,300 lines long and contains 9 unextracted screen components, PDF export logic, CSV generation, canvas drawing, and stats computation.
@@ -346,15 +339,15 @@ erDiagram
 
 | Rule Issue | Current Implementation | Official Cricket Rule (MCC Laws / ICC) |
 |---|---|---|
-| **1. Byes & Leg Byes Charged to Bowler** | [useScoring.ts:54](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L54): `nextBowler.runs += batterRuns + extras` includes Byes & Leg Byes | **MCC Law 21 & 23:** Byes and Leg Byes are conceded by the fielding side as team extras; they are **NEVER** charged against the bowler's bowling figures. |
-| **2. Run Outs Credited to Bowler** | [useScoring.ts:55](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L55): `nextBowler.wickets += 1` increments for all wicket kinds | **MCC Law 38 & 2.1:** A bowler is credited **only** with Bowled, Caught, LBW, Stumped, and Hit Wicket. Bowlers are **NEVER** credited with a wicket for Run Out, Mankad, Retired Hurt/Out, or Timed Out/Absent. |
-| **3. Inability to Dismiss Non-Striker** | [useScoring.ts:55](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L55): Hardcodes `nextStriker.out = true` | **MCC Law 38:** In Run Outs (and Mankading), either the striker OR the non-striker can be dismissed depending on which wicket is broken. |
-| **4. Runs Off a No-Ball** | [useScoring.ts:48](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L48): Extras = `1 + value`; `batterRuns = 0` | **MCC Law 21:** If the batter hits a No Ball off the bat (e.g. hits a 4), the 4 runs belong to the **batter** (credited to batter runs and 4s count), while only the 1-run penalty is recorded as No Ball Extra. |
-| **5. Invalid Dismissals on Free Hit** | [useScoring.ts:55-57](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L55-L57): All 12 dismissal types permitted during `freeHit: true` | **ICC T20/ODI Law 21.19:** Off a Free Hit delivery, the striker cannot be dismissed Bowled, Caught, LBW, Stumped, or Hit Wicket. The only valid dismissals are Run Out, Handled Ball / Obstructing the Field, and Hit Ball Twice. |
-| **6. Strike Rotation on Ball 6 Single** | [useScoring.ts:68](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/hooks/useScoring.ts#L68): `(oddRun \|\| overComplete)` performs only 1 swap | **MCC Law 18 & 17:** Running 1 or 3 runs on the last ball crosses the batters (Swap 1). The end of the over changes bowling ends (Swap 2). Two swaps mean the batter who ran the single **retains the strike** for ball 1 of the next over. |
-| **7. Bowler Consecutive Over Rule** | `availableBowlers` in [LiveScreen](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/App.tsx#L1258) filters only `bowler.name !== score.bowler.name` | Currently partially enforced in UI, but in `useScoring.chooseNextBowler`, there is no validation preventing the same bowler if invoked programmatically. |
+| **1. Byes & Leg Byes Charged to Bowler** | [useScoring.ts:54](src/hooks/useScoring.ts): `nextBowler.runs += batterRuns + extras` includes Byes & Leg Byes | **MCC Law 21 & 23:** Byes and Leg Byes are conceded by the fielding side as team extras; they are **NEVER** charged against the bowler's bowling figures. |
+| **2. Run Outs Credited to Bowler** | [useScoring.ts:55](src/hooks/useScoring.ts): `nextBowler.wickets += 1` increments for all wicket kinds | **MCC Law 38 & 2.1:** A bowler is credited **only** with Bowled, Caught, LBW, Stumped, and Hit Wicket. Bowlers are **NEVER** credited with a wicket for Run Out, Mankad, Retired Hurt/Out, or Timed Out/Absent. |
+| **3. Inability to Dismiss Non-Striker** | [useScoring.ts:55](src/hooks/useScoring.ts): Hardcodes `nextStriker.out = true` | **MCC Law 38:** In Run Outs (and Mankading), either the striker OR the non-striker can be dismissed depending on which wicket is broken. |
+| **4. Runs Off a No-Ball** | [useScoring.ts:48](src/hooks/useScoring.ts): Extras = `1 + value`; `batterRuns = 0` | **MCC Law 21:** If the batter hits a No Ball off the bat (e.g. hits a 4), the 4 runs belong to the **batter** (credited to batter runs and 4s count), while only the 1-run penalty is recorded as No Ball Extra. |
+| **5. Invalid Dismissals on Free Hit** | [useScoring.ts:55-57](src/hooks/useScoring.ts): All 12 dismissal types permitted during `freeHit: true` | **ICC T20/ODI Law 21.19:** Off a Free Hit delivery, the striker cannot be dismissed Bowled, Caught, LBW, Stumped, or Hit Wicket. The only valid dismissals are Run Out, Handled Ball / Obstructing the Field, and Hit Ball Twice. |
+| **6. Strike Rotation on Ball 6 Single** | [useScoring.ts:68](src/hooks/useScoring.ts): `(oddRun \|\| overComplete)` performs only 1 swap | **MCC Law 18 & 17:** Running 1 or 3 runs on the last ball crosses the batters (Swap 1). The end of the over changes bowling ends (Swap 2). Two swaps mean the batter who ran the single **retains the strike** for ball 1 of the next over. |
+| **7. Bowler Consecutive Over Rule** | `availableBowlers` in [LiveScreen](src/screens/LiveScreen.tsx) filters only `bowler.name !== score.bowler.name` | Currently partially enforced in UI, but in `useScoring.chooseNextBowler`, there is no validation preventing the same bowler if invoked programmatically. |
 | **8. Max Over Limit Per Bowler** | Any bowler can bowl unlimited overs up to match max overs | **Standard Playing Conditions:** In limited overs cricket, no single bowler may bowl more than 20% of the total match overs (e.g. max 4 overs in 20 overs, max 2 overs in 10 overs). |
-| **9. Tie Result Labeled as "Match Drawn"** | [App.tsx:451](file:///c:/Users/NANDHA%20KRISHNA/Documents/cricket-scorer/src/App.tsx#L451): `winner: 'Match Drawn', margin: ''` | In limited-overs cricket, equal scores constitute a **Tie** (Draw only applies to multi-day matches without time completion). Limited-overs ties typically proceed to a Super Over. |
+| **9. Tie Result Labeled as "Match Drawn"** | [App.tsx:451](src/App.tsx): `winner: 'Match Drawn', margin: ''` | In limited-overs cricket, equal scores constitute a **Tie** (Draw only applies to multi-day matches without time completion). Limited-overs ties typically proceed to a Super Over. |
 
 ---
 

@@ -15,6 +15,7 @@ dist-ssr
 
 # Environment and secrets
 .env*
+!.env.example
 google-services.json
 GoogleService-Info.plist
 
@@ -34,6 +35,7 @@ gully-scorer-backup.json
 cricket-scorer-db*
 scorer_db/
 export_cricket_db.py
+*.db
 
 # Python virtual environment
 .venv/

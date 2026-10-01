@@ -21,7 +21,7 @@ The application is a mobile-first cricket scoring app. It runs as a React web ap
 | CSS | Responsive mobile-first visual design | `src/index.css`, `src/App.css` |
 | Browser localStorage | Active match, match history, theme, images, and demo auth persistence | `src/context/MatchContext.tsx`, `src/App.tsx` |
 
-There is no backend service in this repository. Database history is read from a static JSON export in `public/full_database_export.json`; new matches are stored in the browser and are not sent to a server.
+There is no backend service in this repository. Match data and statistics are stored in the browser (IndexedDB and localStorage) and synced to Cloud Firestore; new matches are not sent to an external legacy server.
 
 ## 2. Runtime Architecture
 
@@ -44,7 +44,6 @@ flowchart TD
     ROUTER --> SCREENS[Dedicated and legacy screen components]
     SCORING --> LIVE[Live scoring UI]
     CONTEXT --> STORAGE[(Browser localStorage)]
-    APP --> STATIC_DB[/public/full_database_export.json/]
     APP --> EXPORTS[CSV, PNG, PDF, backup export]
     APP --> CSS[src/index.css]
 ```
@@ -212,7 +211,7 @@ The current application shell and remaining orchestration module.
 It currently contains:
 
 - Global theme state and settings overlay.
-- Database statistics loading from `public/full_database_export.json`.
+- Database statistics loading (the legacy database export has been removed).
 - Match setup callbacks such as toss handling, roster editing, and innings initialization.
 - Match completion and result construction.
 - Export helpers for CSV, PNG, backup JSON, and PDF.
@@ -461,12 +460,6 @@ Recommended extraction order:
 4. `ResultScreen` and scorecard components.
 5. Delete duplicate inline implementations and duplicate types from `App.tsx`.
 
-#### `src/data/importedKdmHistory.ts`
-
-Static imported historical match data. It is useful as a migration or seed artifact.
-
-If changing its shape, keep it compatible with `CompletedMatch` or add an explicit conversion function. Do not mutate it as a runtime store.
-
 #### `src/assets/`
 
 Source assets that are imported by TypeScript or React modules. Runtime public URLs such as icons are stored under `public/` instead.
@@ -475,18 +468,9 @@ Source assets that are imported by TypeScript or React modules. Runtime public U
 
 Static files copied directly to the Vite build output.
 
-#### `public/full_database_export.json`
+#### Legacy Database Export
 
-Static export from the older cricket database. The app fetches this file to build database-backed team and player statistics.
-
-Edit or replace it when importing a new database snapshot. Keep the object shape expected by the loaders in `App.tsx`:
-
-- `Players`
-- `Teams`
-- `Matches`
-- `BattingStats`
-- `BowlingStats`
-- `FieldingStats`
+The legacy static database export has been removed from the repository.
 
 #### `public/icons/`
 
@@ -529,10 +513,6 @@ iOS builds require macOS and Xcode. Web changes must be synchronized with `npm r
 ### `com_kdm_scorer/`
 
 Extracted or archived data from the older KDM scorer application. It is not part of the active React runtime path.
-
-### `cricket-icons/` and `cricket-app-icons/`
-
-Icon source and generated icon collections. The active web app uses the PNGs copied under `public/icons/`.
 
 ### `tools/`
 
@@ -647,7 +627,7 @@ When extracting these features, prefer a service module such as `src/services/ex
 
 ### Change team or player statistics
 
-Database-backed statistics are loaded from `public/full_database_export.json` in `App.tsx`. Local completed-match aggregates are calculated by helper functions in the same file.
+Database-backed statistics were originally loaded from a static database export (the legacy database export has been removed). Local completed-match aggregates are calculated by helper functions in the same file.
 
 A future cleanup should move these into:
 
@@ -687,7 +667,7 @@ flowchart TD
     STATE --> HISTORY[Completed matches JSON]
     ACTIVE --> LS[(localStorage: gully-scorer-active-match)]
     HISTORY --> LS2[(localStorage: gully-scorer-completed-matches)]
-    DB[public/full_database_export.json] --> LOAD[Database statistics loader]
+    DB[Legacy database export - removed] --> LOAD[Database statistics loader]
     LOAD --> TEAM[Teams screen]
     LOAD --> PLAYER[Players screen]
 ```
@@ -711,7 +691,7 @@ The active match is serialized as `SavedAppState`. Completed matches are seriali
 ### Browser development
 
 ```powershell
-cd "C:\Users\NANDHA KRISHNA\Documents\cricket-scorer"
+cd scoreMate-app
 npm install
 npm run dev -- --host
 ```
@@ -779,7 +759,7 @@ The refactor is in progress. The most important remaining cleanup items are:
 | Screen navigation | `src/components/MatchRouter.tsx` and the route map in `src/App.tsx` |
 | Colors/layout | `src/index.css` |
 | Icons | `src/components/Icon.tsx` and `public/icons/` |
-| Browser database snapshot | `public/full_database_export.json` |
+| Browser database snapshot | Legacy database export (removed) |
 | Android native behavior | `android/` native source and Gradle files |
 | iOS native behavior | `ios/` Xcode project and native source |
 | Build commands | `package.json` |
@@ -788,6 +768,6 @@ The refactor is in progress. The most important remaining cleanup items are:
 
 - Authentication is a local demo. It is not secure authentication.
 - Match data is local to the browser or packaged app webview.
-- `public/full_database_export.json` is shipped to the client and should contain only data safe to expose.
+- The legacy database export has been removed; client statistics are computed from local storage and bundled history.
 - Generated native directories should be changed carefully because Capacitor can overwrite web assets during sync.
 - The app currently has no server-side conflict resolution or multi-device synchronization.

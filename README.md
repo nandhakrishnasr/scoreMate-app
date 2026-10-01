@@ -16,9 +16,11 @@ A cross-platform cricket scoring app for short and turf matches, built for Andro
 
 ## Tech stack
 
-- Vite + TypeScript
-- Capacitor for Android and iOS packaging
-- Firebase Firestore *(confirm)*
+- React 19 + TypeScript + Vite
+- Capacitor 8 for Android and iOS
+- Firebase Authentication (email, Google, Apple, phone) and Cloud Firestore for multi-device sync
+- IndexedDB for offline-first local storage
+- Recharts and jsPDF for charts and scorecard PDF export
 
 ## Getting started
 
@@ -40,10 +42,6 @@ npm run mobile:sync
 **Android:** install Android Studio and a JDK, set `JAVA_HOME`, then run `npm run android:build`. The debug APK is at `android/app/build/outputs/apk/debug/app-debug.apk`. Open the project in Android Studio with `npm run android:open`.
 
 **iOS:** requires macOS with Xcode and CocoaPods. Run `npm run ios:open` or `npm run ios:build`, then sign the project with an Apple Developer team in Xcode.
-
-## Roadmap
-
-- *(add 2–3 things you plan to build next)*
 
 ## Support
 
