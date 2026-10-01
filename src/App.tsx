@@ -15,10 +15,12 @@ import { SettingsModal } from './components/modals/SettingsModal'
 import { HistoryScreen } from './screens/HistoryScreen'
 import { TeamsScreen } from './screens/TeamsScreen'
 import { PlayersStatsScreen } from './screens/PlayersStatsScreen'
+import { ProfileScreen } from './screens/ProfileScreen'
 import { ScorecardScreen } from './screens/ScorecardScreen'
 import { ResultScreen } from './screens/ResultScreen'
 import { MatchProvider, useMatchState } from './context/MatchContext'
 import { SettingsContext } from './context/SettingsContext'
+import { NavigationContext } from './context/NavigationContext'
 import { useMatchCoordinator } from './hooks/useMatchCoordinator'
 import { useBackNavigation } from './hooks/useBackNavigation'
 import { computeBackAction, type BackState } from './services/navigationService'
@@ -472,6 +474,16 @@ function AppContent() {
             setScreen={setScreen}
           />
         ),
+        profile: (
+          <ProfileScreen
+            setScreen={setScreen}
+            openSettings={() => setSettingsOpen(true)}
+            onReloadMatches={async () => {
+              const persisted = await matchRepository.listMatches({ status: 'completed' })
+              setCompletedMatches(persisted.map(toCompletedMatch))
+            }}
+          />
+        ),
       }}
     />
   )
@@ -510,46 +522,48 @@ function AppContent() {
   }
 
   return (
-    <SettingsContext.Provider value={() => setSettingsOpen(true)}>
-      <MatchProvider value={{ score, scoring, state: matchState }}>
-        <div className="app-canvas">
-          {route}
+    <NavigationContext.Provider value={setScreen}>
+      <SettingsContext.Provider value={() => setSettingsOpen(true)}>
+        <MatchProvider value={{ score, scoring, state: matchState }}>
+          <div className="app-canvas">
+            {route}
 
-          {/* Undo last delivery */}
-          {scoring.undoPending && (
-            <ConfirmModal
-              title="Undo the last delivery?"
-              onCancel={() => scoring.setUndoPending(false)}
-              onConfirm={scoring.confirmUndo}
-            />
-          )}
+            {/* Undo last delivery */}
+            {scoring.undoPending && (
+              <ConfirmModal
+                title="Undo the last delivery?"
+                onCancel={() => scoring.setUndoPending(false)}
+                onConfirm={scoring.confirmUndo}
+              />
+            )}
 
-          {/* Leave match — navigates to Setup, match stays in_progress */}
-          {leavePending && (
-            <ConfirmModal
-              title="Leave this match?"
-              message="The match is still in progress and has been saved. You can resume it later from Setup."
-              confirmLabel="Leave Match"
-              cancelLabel="Continue Scoring"
-              onCancel={() => setLeavePending(false)}
-              onConfirm={handleLeaveMatch}
-            />
-          )}
+            {/* Leave match — navigates to Setup, match stays in_progress */}
+            {leavePending && (
+              <ConfirmModal
+                title="Leave this match?"
+                message="The match is still in progress and has been saved. You can resume it later from Setup."
+                confirmLabel="Leave Match"
+                cancelLabel="Continue Scoring"
+                onCancel={() => setLeavePending(false)}
+                onConfirm={handleLeaveMatch}
+              />
+            )}
 
-          {settingsOpen && (
-            <SettingsModal
-              theme={theme}
-              onThemeChange={setTheme}
-              onClose={() => setSettingsOpen(false)}
-              onReloadMatches={async () => {
-                const persisted = await matchRepository.listMatches({ status: 'completed' })
-                setCompletedMatches(persisted.map(toCompletedMatch))
-              }}
-            />
-          )}
-        </div>
-      </MatchProvider>
-    </SettingsContext.Provider>
+            {settingsOpen && (
+              <SettingsModal
+                theme={theme}
+                onThemeChange={setTheme}
+                onClose={() => setSettingsOpen(false)}
+                onReloadMatches={async () => {
+                  const persisted = await matchRepository.listMatches({ status: 'completed' })
+                  setCompletedMatches(persisted.map(toCompletedMatch))
+                }}
+              />
+            )}
+          </div>
+        </MatchProvider>
+      </SettingsContext.Provider>
+    </NavigationContext.Provider>
   )
 }
 

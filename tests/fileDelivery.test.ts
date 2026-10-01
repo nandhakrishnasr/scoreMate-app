@@ -1,6 +1,6 @@
 import { describe, it, beforeEach } from 'node:test'
 import assert from 'node:assert'
-import { deliverFile } from '../src/utils/fileDelivery'
+import { deliverFile } from '../src/utils/fileDelivery.ts'
 
 describe('File Delivery Utility', () => {
   beforeEach(() => {

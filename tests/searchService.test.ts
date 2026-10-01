@@ -11,9 +11,9 @@ import {
   filterMatches,
   filterTeams,
   filterPlayers,
-} from '../src/utils/search'
-import type { CompletedMatch, PlayerStat, ScoreState, TeamStat } from '../src/types/match'
-import { toCompletedMatch, type PersistedMatchRecord } from '../src/types/database'
+} from '../src/utils/search.ts'
+import type { CompletedMatch, PlayerStat, ScoreState, TeamStat } from '../src/types/match.ts'
+import { toCompletedMatch, type PersistedMatchRecord } from '../src/types/database.ts'
 
 test('Search Normalization - Exact required pairs', () => {
   const pairs: [string, string][] = [

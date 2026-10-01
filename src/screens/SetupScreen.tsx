@@ -89,7 +89,6 @@ export function SetupScreen(props: SetupScreenProps) {
         <div className="home-intro">
           <span className="home-kicker">Street cricket, scored cleanly</span>
           <h2>Set up a match</h2>
-          <p>Two teams. One toss. Every run.</p>
         </div>
         <div className="team-matchup">
           <input

@@ -86,7 +86,7 @@ export type ScoreState = {
   battingStats: Player[]
   bowlerStats: BowlerStats[]
 }
-export type Screen = 'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players'
+export type Screen = 'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players' | 'profile'
 export type BallKind = 'runs' | 'wide' | 'noBall' | 'bye' | 'legBye' | 'wicket'
 export type ScoringModal = 'runs' | 'wide' | 'noBall' | 'bye' | 'legBye' | 'wicket' | null
 export type WicketDetails = {

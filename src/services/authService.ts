@@ -395,4 +395,72 @@ export const authService = {
       throw err
     }
   },
+
+  // 13. Update User Profile (Display Name & Photo URL)
+  async updateUserProfile(profile: { displayName?: string; photoURL?: string | null }): Promise<AuthUser> {
+    const currentUser = firebaseAuth.currentUser
+    if (currentUser) {
+      // Save local avatar cache immediately
+      if (typeof localStorage !== 'undefined') {
+        try {
+          if (profile.photoURL) {
+            localStorage.setItem(`scoremate_avatar_${currentUser.uid}`, profile.photoURL)
+          } else if (profile.photoURL === null) {
+            localStorage.removeItem(`scoremate_avatar_${currentUser.uid}`)
+          }
+        } catch {
+          // ignore local storage errors
+        }
+      }
+
+      const updateData: { displayName?: string; photoURL?: string | null } = {}
+      if (profile.displayName !== undefined) {
+        updateData.displayName = profile.displayName
+      }
+      // Firebase Auth photoURL requires a valid HTTP(S) URL of <= 2048 chars.
+      // Base64 data URLs exceed 2048 chars and will cause Firebase Auth to fail.
+      const isHttpUrl =
+        Boolean(profile.photoURL) &&
+        (profile.photoURL!.startsWith('http://') || profile.photoURL!.startsWith('https://')) &&
+        profile.photoURL!.length <= 2048
+
+      if (isHttpUrl) {
+        updateData.photoURL = profile.photoURL
+      } else if (profile.photoURL === null) {
+        updateData.photoURL = null
+      }
+
+      try {
+        const { updateProfile } = await import('firebase/auth')
+        await updateProfile(currentUser, updateData)
+      } catch (authErr) {
+        console.warn('Firebase Auth updateProfile non-fatal warning:', authErr)
+      }
+
+      const formatted = formatFirebaseUser(currentUser)!
+      if (profile.displayName !== undefined) formatted.displayName = profile.displayName
+      if (profile.photoURL !== undefined) formatted.photoURL = profile.photoURL
+      return formatted
+    }
+
+    if (isOfflineGuestActive()) {
+      let savedDisplayName = profile.displayName ?? 'Guest Player'
+      let savedPhotoURL = profile.photoURL ?? null
+      try {
+        const raw = localStorage.getItem('scoremate-offline-guest-profile')
+        if (raw) {
+          const parsed = JSON.parse(raw)
+          if (profile.displayName === undefined && parsed.displayName) savedDisplayName = parsed.displayName
+          if (profile.photoURL === undefined && parsed.photoURL !== undefined) savedPhotoURL = parsed.photoURL
+        }
+      } catch {}
+      localStorage.setItem('scoremate-offline-guest-profile', JSON.stringify({
+        displayName: savedDisplayName,
+        photoURL: savedPhotoURL,
+      }))
+      return formatFirebaseUser(null, true)!
+    }
+
+    throw new Error('No active user session to update profile.')
+  },
 }

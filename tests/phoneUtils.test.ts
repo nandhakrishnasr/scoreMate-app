@@ -1,6 +1,6 @@
 import { describe, it } from 'node:test'
 import assert from 'node:assert'
-import { normalizePhoneNumber } from '../src/utils/phoneUtils'
+import { normalizePhoneNumber } from '../src/utils/phoneUtils.ts'
 
 describe('Phone Number Normalization and Validation (E.164)', () => {
   it('normalizes 10-digit Indian mobile numbers without country code', () => {

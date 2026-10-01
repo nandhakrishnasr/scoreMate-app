@@ -5,6 +5,7 @@
   "version": "1.0.0",
   "type": "module",
   "scripts": {
+    "test": "node --test tests/*.test.ts",
     "dev": "vite",
     "build": "tsc -b && vite build",
     "mobile:sync": "npm run build && npx cap sync",

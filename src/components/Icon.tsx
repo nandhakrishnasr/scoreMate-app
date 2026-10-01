@@ -110,6 +110,27 @@ export default function Icon({ name, size = 20, variant = 'white', label, classN
     )
   }
 
+  if (name === 'user' || name === 'profile') {
+    return (
+      <svg
+        className={`app-icon ${className}`}
+        width={size}
+        height={size}
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden={label ? undefined : true}
+        aria-label={label}
+      >
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2" />
+        <circle cx="12" cy="7" r="4" />
+      </svg>
+    )
+  }
+
   const folder = size <= 128 ? 128 : 256
   return (
     <img

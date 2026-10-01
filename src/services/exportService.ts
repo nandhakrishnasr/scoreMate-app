@@ -45,10 +45,9 @@ export function exportMatchCsv(match: CompletedMatch) {
       ])
   }
   const csvContent = rows.map((row) => row.map(csvCell).join(',')).join('\n')
-  const filename = `${match.teamOne}-vs-${match.teamTwo}-scorecard.csv`.replace(
-    /[^a-z0-9-]+/gi,
-    '-',
-  )
+  const safeTeamOne = match.teamOne.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'team1'
+  const safeTeamTwo = match.teamTwo.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'team2'
+  const filename = `${safeTeamOne}-vs-${safeTeamTwo}-scorecard.csv`
   void deliverFile({
     filename,
     content: csvContent,
@@ -146,7 +145,9 @@ export function downloadScorecard({
   y += 5
   addInnings(firstInningsScore, firstTeam, 'First innings')
   addInnings(score, secondTeam, 'Second innings')
-  const filename = `${firstTeam}-vs-${secondTeam}-scorecard.pdf`.replace(/[^a-z0-9-]+/gi, '-')
+  const safeFirst = firstTeam.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'team1'
+  const safeSecond = secondTeam.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'team2'
+  const filename = `${safeFirst}-vs-${safeSecond}-scorecard.pdf`
   if (Capacitor.isNativePlatform()) {
     const dataUri = pdf.output('datauristring')
     void deliverFile({

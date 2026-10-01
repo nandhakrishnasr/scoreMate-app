@@ -162,7 +162,11 @@ export class GisOAuthProvider implements OAuthTokenProvider {
   private gisAdapter?: GisGlobalAdapter
 
   constructor(config?: { clientId?: string; scope?: string; gisAdapter?: GisGlobalAdapter }) {
-    this.clientId = config?.clientId || getEnvVariable('VITE_GOOGLE_CLIENT_ID') || ''
+    this.clientId =
+      config?.clientId !== undefined
+        ? config.clientId
+        : (getEnvVariable('VITE_GOOGLE_CLIENT_ID') ||
+           '772863652395-h4olkmum81i58o40soh0irqlhafjsp4n.apps.googleusercontent.com')
     this.scope = config?.scope || DRIVE_APPDATA_SCOPE
     this.gisAdapter = config?.gisAdapter
   }

@@ -5,8 +5,8 @@ import {
   applyTheme,
   THEME_KEY,
   THEME_COLORS,
-} from '../src/utils/theme'
-import { STORES, DB_NAME } from '../src/types/database'
+} from '../src/utils/theme.ts'
+import { STORES, DB_NAME } from '../src/types/database.ts'
 
 describe('Phase 11: Light/Dark Theme Consistency', () => {
   describe('Theme Resolution Precedence', () => {

@@ -39,9 +39,10 @@ export interface AuthContextValue {
   linkGuestWithEmail: (email: string, pass: string) => Promise<AuthUser | CredentialCollisionInfo>
   linkGuestWithGoogle: () => Promise<AuthUser | CredentialCollisionInfo>
   linkGuestWithApple: () => Promise<AuthUser | CredentialCollisionInfo>
+  updateUserProfile: (profile: { displayName?: string; photoURL?: string | null }) => Promise<AuthUser>
 }
 
-const AuthContext = createContext<AuthContextValue | null>(null)
+export const AuthContext = createContext<AuthContextValue | null>(null)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<AuthUser | null>(null)
@@ -273,6 +274,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   }, [])
 
+  const updateUserProfile = useCallback(async (profile: { displayName?: string; photoURL?: string | null }) => {
+    setError(null)
+    try {
+      const updated = await authService.updateUserProfile(profile)
+      setUser(updated)
+      return updated
+    } catch (err) {
+      const msg = mapAuthError(err)
+      setError(msg)
+      throw new Error(msg)
+    }
+  }, [])
+
   const value: AuthContextValue = {
     user,
     status,
@@ -293,6 +307,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     linkGuestWithEmail,
     linkGuestWithGoogle,
     linkGuestWithApple,
+    updateUserProfile,
   }
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>

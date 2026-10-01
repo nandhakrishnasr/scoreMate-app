@@ -1,23 +1,16 @@
-import { useState, useEffect, useRef, type ChangeEvent } from 'react'
+import { useState, useRef, type ChangeEvent } from 'react'
 import Icon from '../Icon'
 import { useAuth } from '../../context/AuthContext'
-import { AuthModal } from './AuthModal'
 import { RestoreConfirmModal } from './RestoreConfirmModal'
-import { googleDriveService, type DriveFileMetadata } from '../../services/googleDriveService'
 import {
   executeLocalExport,
   executeRestore,
-  executeDriveBackup,
-  executeDriveDownload,
-  executeDriveDisconnect,
   inspectBackupSummary,
   sanitizeUserFacingError,
-  formatLastBackupTime,
   type BackupUIOperation,
   type BackupStatusMessage,
   type BackupInspectionSummary,
 } from '../../services/backupUIController'
-import { settingsRepository } from '../../services/repositories/settingsRepository'
 import type { RestoreMode } from '../../types/database'
 
 export interface SettingsModalProps {
@@ -37,20 +30,11 @@ export function SettingsModal({
   onImport,
   onReloadMatches,
 }: SettingsModalProps) {
-  const { user, isGuest, signOut, linkGuestWithEmail, linkGuestWithGoogle, linkGuestWithApple } = useAuth()
-  const [showLinkModal, setShowLinkModal] = useState(false)
-  const [collisionInfo, setCollisionInfo] = useState<string | null>(null)
-  const [linkMessage, setLinkMessage] = useState<string | null>(null)
-  const [loading, setLoading] = useState(false)
+  const { user } = useAuth()
 
-  // Backup & Restore State (Milestone 4.6)
+  // Local Backup & Restore State
   const [operation, setOperation] = useState<BackupUIOperation>('idle')
   const [statusMessage, setStatusMessage] = useState<BackupStatusMessage | null>(null)
-  const [driveConnected, setDriveConnected] = useState<boolean>(() => googleDriveService.isConnected())
-  const [_driveBackupMeta, setDriveBackupMeta] = useState<DriveFileMetadata | null>(() =>
-    googleDriveService.getStoredFileMetadata()
-  )
-  const [lastBackupAt, setLastBackupAt] = useState<string | null>(null)
 
   // Restore Modal State
   const [restoreModalOpen, setRestoreModalOpen] = useState(false)
@@ -58,88 +42,7 @@ export function SettingsModal({
   const [pendingRestoreSummary, setPendingRestoreSummary] = useState<BackupInspectionSummary | null>(null)
 
   const fileInputRef = useRef<HTMLInputElement | null>(null)
-
   const isBusy = operation !== 'idle'
-
-  // Query Drive status and last backup timestamp on mount
-  useEffect(() => {
-    let active = true
-    void settingsRepository.getLastSuccessfulDriveBackupAt().then((ts) => {
-      if (active) setLastBackupAt(ts)
-    }).catch(() => {})
-
-    if (googleDriveService.isConnected()) {
-      void googleDriveService.findBackupFile().then((meta) => {
-        if (active) setDriveBackupMeta(meta)
-      }).catch(() => {
-        // Silent catch for background discovery
-      })
-    }
-    return () => {
-      active = false
-    }
-  }, [])
-
-  async function handleSignOut() {
-    try {
-      googleDriveService.clearToken()
-      setDriveConnected(false)
-      setDriveBackupMeta(null)
-      await signOut()
-      onClose()
-    } catch {
-      window.alert('Failed to sign out. Please check your connection.')
-    }
-  }
-
-  async function handleLinkEmail(email: string, pass: string) {
-    setLoading(true)
-    try {
-      const res = await linkGuestWithEmail(email, pass)
-      if ('message' in res) {
-        setCollisionInfo(res.message)
-      } else {
-        setLinkMessage('Account successfully created and linked!')
-        setShowLinkModal(false)
-      }
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleLinkGoogle() {
-    setLoading(true)
-    try {
-      const res = await linkGuestWithGoogle()
-      if ('message' in res) {
-        window.alert(res.message)
-      } else {
-        setLinkMessage('Google account successfully linked!')
-      }
-    } catch (err: unknown) {
-      window.alert(err instanceof Error ? err.message : 'Failed to link Google account.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  async function handleLinkApple() {
-    setLoading(true)
-    try {
-      const res = await linkGuestWithApple()
-      if ('message' in res) {
-        window.alert(res.message)
-      } else {
-        setLinkMessage('Apple account successfully linked!')
-      }
-    } catch (err: unknown) {
-      window.alert(err instanceof Error ? err.message : 'Failed to link Apple account.')
-    } finally {
-      setLoading(false)
-    }
-  }
-
-  // --- Backup & Restore Handlers (Milestone 4.6) ---
 
   async function handleLocalExport() {
     if (isBusy) return
@@ -171,7 +74,6 @@ export function SettingsModal({
     const file = e.target.files?.[0]
     if (!file) return
 
-    // If caller provided legacy onImport prop, delegate to it
     if (onImport) {
       onImport(e)
       if (fileInputRef.current) fileInputRef.current.value = ''
@@ -236,204 +138,16 @@ export function SettingsModal({
     }
   }
 
-  async function handleConnectDrive() {
-    if (isBusy) return
-    setOperation('connecting')
-    setStatusMessage({ type: 'info', text: 'Connecting to Google Drive…' })
-    try {
-      await googleDriveService.authorize(true)
-      setDriveConnected(true)
-      const meta = await googleDriveService.findBackupFile()
-      setDriveBackupMeta(meta)
-      setStatusMessage({
-        type: 'success',
-        text: 'Google Drive connected successfully.',
-      })
-    } catch (err) {
-      setStatusMessage({
-        type: 'error',
-        text: sanitizeUserFacingError(err),
-      })
-    } finally {
-      setOperation('idle')
-    }
-  }
-
-  async function handleDriveBackup() {
-    if (isBusy) return
-    setOperation('backing_up_drive')
-    setStatusMessage({ type: 'info', text: 'Backing up to Google Drive…' })
-    try {
-      const res = await executeDriveBackup()
-      if (res.success) {
-        setDriveConnected(true)
-        setDriveBackupMeta(res.metadata ?? null)
-        const ts = await settingsRepository.getLastSuccessfulDriveBackupAt()
-        setLastBackupAt(ts)
-        setStatusMessage({
-          type: 'success',
-          text: 'Backup successfully uploaded to Google Drive.',
-        })
-      } else {
-        setStatusMessage({
-          type: 'error',
-          text: res.error || 'Google Drive backup failed.',
-        })
-      }
-    } finally {
-      setOperation('idle')
-    }
-  }
-
-  async function handleDriveRestore() {
-    if (isBusy) return
-    setOperation('downloading_drive')
-    setStatusMessage({ type: 'info', text: 'Downloading backup from Google Drive…' })
-    try {
-      const res = await executeDriveDownload()
-      if (res.success && res.content) {
-        const summary = inspectBackupSummary(res.content)
-        setPendingRestoreContent(res.content)
-        setPendingRestoreSummary(summary)
-        setRestoreModalOpen(true)
-        setStatusMessage(null)
-      } else {
-        setStatusMessage({
-          type: 'error',
-          text: res.error || 'Failed to download backup from Google Drive.',
-        })
-      }
-    } finally {
-      setOperation('idle')
-    }
-  }
-
-  async function handleDriveDisconnect() {
-    if (isBusy) return
-    setOperation('connecting')
-    try {
-      const res = await executeDriveDisconnect()
-      setDriveConnected(false)
-      setDriveBackupMeta(null)
-      if (res.success) {
-        setStatusMessage({
-          type: 'info',
-          text: 'Google Drive authorization disconnected.',
-        })
-      } else {
-        setStatusMessage({
-          type: 'error',
-          text: res.error || 'Failed to disconnect Google Drive.',
-        })
-      }
-    } finally {
-      setOperation('idle')
-    }
-  }
-
-  const accountDisplay = user
-    ? user.email || user.phoneNumber || (user.isOfflineGuest ? 'Guest (Offline)' : user.isAnonymous ? 'Guest (Online)' : 'ScoreMate Account')
-    : 'Not signed in'
-
   return (
     <div className="settings-backdrop" onClick={onClose}>
       <section className="settings-modal" onClick={(event) => event.stopPropagation()}>
         <button className="sheet-close" onClick={onClose} aria-label="Close settings" disabled={isBusy}>
-          <span aria-hidden="true">×</span>
+          <Icon name="x" size={16} />
         </button>
         <div className="settings-head">
           <span className="section-kicker">ScoreMate</span>
-          <h3>Settings</h3>
+          <h3>App Settings</h3>
         </div>
-
-        {/* Account Info Banner */}
-        <div
-          className="account-card"
-          style={{
-            background: 'var(--surface-raised)',
-            padding: '12px 14px',
-            borderRadius: '12px',
-            marginBottom: '14px',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'space-between',
-          }}
-        >
-          <div>
-            <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block', fontWeight: 600 }}>
-              ACCOUNT
-            </span>
-            <strong style={{ fontSize: '13px', color: 'var(--soft)' }}>{accountDisplay}</strong>
-          </div>
-          {user && (
-            <button
-              onClick={handleSignOut}
-              disabled={isBusy}
-              style={{
-                background: 'rgba(255, 143, 155, 0.12)',
-                border: '1px solid var(--danger)',
-                color: 'var(--danger)',
-                padding: '6px 12px',
-                borderRadius: '8px',
-                fontSize: '11px',
-                fontWeight: 700,
-                cursor: isBusy ? 'not-allowed' : 'pointer',
-              }}
-            >
-              Sign out
-            </button>
-          )}
-        </div>
-
-        {/* Guest Upgrade Prompt */}
-        {isGuest && (
-          <div
-            className="guest-upgrade-banner"
-            style={{
-              background: 'rgba(169, 152, 255, 0.1)',
-              border: '1px solid var(--accent)',
-              borderRadius: '12px',
-              padding: '12px 14px',
-              marginBottom: '14px',
-            }}
-          >
-            <div style={{ fontSize: '12px', color: 'var(--soft)', marginBottom: '8px' }}>
-              <strong>Save your match data permanently</strong>
-              <p style={{ margin: '4px 0 0', fontSize: '11px', color: 'var(--muted)' }}>
-                Upgrade your guest session to keep your statistics across devices.
-              </p>
-            </div>
-            {linkMessage && (
-              <p style={{ color: 'var(--green)', fontSize: '12px', margin: '4px 0 8px' }}>{linkMessage}</p>
-            )}
-            <div style={{ display: 'flex', gap: '8px' }}>
-              <button
-                className="primary-button"
-                style={{ flex: 1, padding: '8px 10px', fontSize: '12px' }}
-                onClick={() => setShowLinkModal(true)}
-                disabled={loading || isBusy}
-              >
-                Create Account
-              </button>
-              <button
-                className="secondary-button"
-                style={{ flex: 1, padding: '8px 10px', fontSize: '12px' }}
-                onClick={handleLinkGoogle}
-                disabled={loading || isBusy}
-              >
-                Link Google
-              </button>
-              <button
-                className="secondary-button"
-                style={{ flex: 1, padding: '8px 10px', fontSize: '12px' }}
-                onClick={handleLinkApple}
-                disabled={loading || isBusy}
-              >
-                Link Apple
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Status Message Banner */}
         {statusMessage && (
@@ -457,27 +171,61 @@ export function SettingsModal({
         )}
 
         {/* ==================================================
-            DATA & BACKUP SECTION (Milestone 4.6)
+            APPEARANCE SECTION
             ================================================== */}
-        <div className="backup-section">
-          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+        <div className="settings-section" style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
             <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.12em' }}>
-              DATA & BACKUP
+              APPEARANCE
+            </span>
+          </div>
+          <div className="settings-card" style={{ background: 'var(--surface-raised)', borderRadius: '12px', padding: '12px 14px' }}>
+            <div className="theme-setting" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <strong style={{ fontSize: '13px', color: 'var(--soft)', display: 'block' }}>Theme</strong>
+                <span style={{ fontSize: '11px', color: 'var(--muted)' }}>Choose light or dark visual style</span>
+              </div>
+              <div className="theme-toggle" role="group" aria-label="Theme selection">
+                <button
+                  type="button"
+                  className={theme === 'dark' ? 'active' : ''}
+                  onClick={() => onThemeChange('dark')}
+                  aria-pressed={theme === 'dark'}
+                  aria-label="Switch to Dark theme"
+                >
+                  Dark
+                </button>
+                <button
+                  type="button"
+                  className={theme === 'light' ? 'active' : ''}
+                  onClick={() => onThemeChange('light')}
+                  aria-pressed={theme === 'light'}
+                  aria-label="Switch to Light theme"
+                >
+                  Light
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* ==================================================
+            LOCAL DATA MANAGEMENT SECTION
+            ================================================== */}
+        <div className="settings-section" style={{ marginBottom: '16px' }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.12em' }}>
+              DATA MANAGEMENT
             </span>
             {isBusy && (
               <span style={{ fontSize: '11px', color: 'var(--muted)', fontStyle: 'italic' }}>
                 {operation === 'exporting' && 'Exporting…'}
                 {operation === 'importing' && 'Importing…'}
-                {operation === 'connecting' && 'Connecting…'}
-                {operation === 'backing_up_drive' && 'Backing up…'}
-                {operation === 'downloading_drive' && 'Downloading backup…'}
                 {operation === 'restoring' && 'Restoring…'}
-                {operation === 'syncing' && 'Syncing…'}
               </span>
             )}
           </div>
 
-          {/* Local Backup Card */}
           <div className="backup-card">
             <div className="backup-card-head">
               <span className="backup-card-title">Local Backup</span>
@@ -511,117 +259,70 @@ export function SettingsModal({
               </label>
             </div>
           </div>
-
-          {/* Google Drive Card */}
-          <div className="backup-card">
-            <div className="backup-card-head">
-              <span className="backup-card-title">Google Drive</span>
-              <span className={`backup-status-badge ${driveConnected ? 'connected' : 'disconnected'}`}>
-                {driveConnected ? 'Connected' : 'Not Connected'}
-              </span>
-            </div>
-            <p className="backup-card-desc">
-              {driveConnected
-                ? `Last Google Drive backup: ${formatLastBackupTime(lastBackupAt)}.`
-                : 'Back up and restore your match data securely across devices via Google Drive.'}
-            </p>
-
-            <div className="backup-button-row">
-              {!driveConnected ? (
-                <button
-                  className="secondary-button"
-                  onClick={handleConnectDrive}
-                  disabled={isBusy}
-                  style={{ flex: 1 }}
-                >
-                  <Icon name="download-cloud" />
-                  {operation === 'connecting' ? 'Connecting…' : 'Connect Google Drive'}
-                </button>
-              ) : (
-                <>
-                  <button
-                    className="secondary-button"
-                    onClick={handleDriveBackup}
-                    disabled={isBusy}
-                    style={{ flex: 1 }}
-                  >
-                    <Icon name="download-cloud" />
-                    {operation === 'backing_up_drive' ? 'Backing up…' : 'Back up to Drive'}
-                  </button>
-                  <button
-                    className="secondary-button"
-                    onClick={handleDriveRestore}
-                    disabled={isBusy}
-                    style={{ flex: 1 }}
-                  >
-                    <Icon name="upload-cloud" />
-                    {operation === 'downloading_drive' ? 'Downloading…' : 'Restore from Drive'}
-                  </button>
-                  <button
-                    className="secondary-button"
-                    onClick={handleDriveDisconnect}
-                    disabled={isBusy}
-                    style={{
-                      flex: 0.6,
-                      color: 'var(--danger)',
-                      borderColor: 'rgba(255, 143, 155, 0.3)',
-                    }}
-                    title="Disconnect Google Drive authorization"
-                  >
-                    Disconnect
-                  </button>
-                </>
-              )}
-            </div>
-          </div>
         </div>
 
-        {/* Existing Appearance & Export Utilities */}
-        <div className="settings-grid" style={{ marginTop: '14px' }}>
-          <div className="theme-setting">
-            <span>Appearance</span>
-            <div className="theme-toggle" role="group" aria-label="Theme selection">
+        {/* ==================================================
+            ABOUT SECTION
+            ================================================== */}
+        <div className="settings-section">
+          <div style={{ marginBottom: '8px' }}>
+            <span style={{ fontSize: '11px', fontWeight: 800, color: 'var(--accent)', letterSpacing: '0.12em' }}>
+              ABOUT
+            </span>
+          </div>
+          <div className="settings-card" style={{ background: 'var(--surface-raised)', borderRadius: '12px', padding: '12px 14px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px' }}>
+              <div>
+                <strong style={{ fontSize: '13px', color: 'var(--soft)' }}>ScoreMate</strong>
+                <span style={{ fontSize: '11px', color: 'var(--muted)', display: 'block' }}>Street cricket, scored cleanly</span>
+              </div>
+              <span style={{ fontSize: '12px', color: 'var(--muted)', fontWeight: 600 }}>v1.0.0</span>
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '8px' }}>
               <button
                 type="button"
-                className={theme === 'dark' ? 'active' : ''}
-                onClick={() => onThemeChange('dark')}
-                aria-pressed={theme === 'dark'}
-                aria-label="Switch to Dark theme"
+                className="secondary-button"
+                onClick={() => window.alert('Open Source Licenses:\n- React & React-DOM (MIT)\n- Vite (MIT)\n- Capacitor (MIT)\n- Firebase SDK (Apache 2.0)\n- Recharts (MIT)')}
+                disabled={isBusy}
+                style={{ fontSize: '11px', padding: '8px' }}
               >
-                Dark
+                <Icon name="licenses" size={16} />
+                Licenses
               </button>
               <button
                 type="button"
-                className={theme === 'light' ? 'active' : ''}
-                onClick={() => onThemeChange('light')}
-                aria-pressed={theme === 'light'}
-                aria-label="Switch to Light theme"
+                className="secondary-button"
+                onClick={() => window.alert('ScoreMate — Crafted with precision for street & club cricket scorers.')}
+                disabled={isBusy}
+                style={{ fontSize: '11px', padding: '8px' }}
               >
-                Light
+                <Icon name="credits" size={16} />
+                Credits
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => window.alert('Privacy Policy:\nScoreMate operates offline-first. Your match data is stored on your device and optionally backed up to your personal Google Drive or synchronized to your authenticated Firebase account.')}
+                disabled={isBusy}
+                style={{ fontSize: '11px', padding: '8px' }}
+              >
+                Privacy Policy
+              </button>
+              <button
+                type="button"
+                className="secondary-button"
+                onClick={() => window.alert('Terms of Service:\nScoreMate is provided for recreational cricket scoring. Always ensure your backups are kept up-to-date.')}
+                disabled={isBusy}
+                style={{ fontSize: '11px', padding: '8px' }}
+              >
+                Terms
               </button>
             </div>
           </div>
-
-          <button
-            className="secondary-button"
-            onClick={() => window.alert('Open source licenses: MIT-style local app assets.')}
-            disabled={isBusy}
-          >
-            <Icon name="licenses" />
-            Licenses
-          </button>
-          <button
-            className="secondary-button"
-            onClick={() => window.alert('ScoreMate by your local scoring studio.')}
-            disabled={isBusy}
-          >
-            <Icon name="credits" />
-            Credits
-          </button>
         </div>
       </section>
 
-      {/* Restore Confirmation Dialog (Milestone 4.6) */}
+      {/* Restore Confirmation Dialog */}
       <RestoreConfirmModal
         isOpen={restoreModalOpen}
         isRestoring={operation === 'restoring'}
@@ -633,29 +334,6 @@ export function SettingsModal({
         }}
         onConfirm={handleConfirmRestore}
       />
-
-      {/* Account Linking Modal */}
-      {showLinkModal && (
-        <AuthModal
-          type="create"
-          close={() => setShowLinkModal(false)}
-          onSubmitCreate={handleLinkEmail}
-        />
-      )}
-
-      {/* Collision Modal */}
-      {collisionInfo && (
-        <AuthModal
-          type="collision"
-          collisionMessage={collisionInfo}
-          close={() => setCollisionInfo(null)}
-          onSwitchToSignIn={() => {
-            setCollisionInfo(null)
-            onClose()
-            handleSignOut()
-          }}
-        />
-      )}
     </div>
   )
 }

@@ -1,4 +1,5 @@
 import { useState } from 'react'
+import Icon from '../Icon'
 import type { RestoreMode } from '../../types/database'
 
 export interface RestoreConfirmModalProps {
@@ -36,7 +37,7 @@ export function RestoreConfirmModal({
           disabled={isRestoring}
           aria-label="Close restore dialog"
         >
-          <span aria-hidden="true">×</span>
+          <Icon name="x" size={16} />
         </button>
 
         <div className="settings-head">

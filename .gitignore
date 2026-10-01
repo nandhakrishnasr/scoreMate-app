@@ -16,6 +16,14 @@ dist-ssr
 google-services.json
 GoogleService-Info.plist
 
+# Android keystore and release signing properties
+key.properties
+android/key.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

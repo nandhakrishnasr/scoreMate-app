@@ -14,6 +14,7 @@ export type AutoBackupSkipReason =
   | 'already_running'
   | 'already_completed_this_session'
   | 'offline'
+  | 'disabled'
 
 export interface AutoBackupResult {
   attempted: boolean
@@ -122,6 +123,11 @@ export async function checkAndRunAutomaticBackup(options?: {
 
   let lastBackupAt: string | null = null
   try {
+    // 6. User Toggle Guard
+    const autoBackupEnabled = await settingsRepository.isAutoBackupEnabled().catch(() => true)
+    if (!autoBackupEnabled) {
+      return { attempted: false, success: false, skipReason: 'disabled' }
+    }
     // 6. Check 7-Day Eligibility
     try {
       lastBackupAt = await settingsRepository.getLastSuccessfulDriveBackupAt()

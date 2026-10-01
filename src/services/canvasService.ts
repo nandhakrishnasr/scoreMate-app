@@ -46,10 +46,9 @@ export function exportMatchImage(match: CompletedMatch) {
     }
   }
   const dataUrl = canvas.toDataURL('image/png')
-  const filename = `${match.teamOne}-vs-${match.teamTwo}-scorecard.png`.replace(
-    /[^a-z0-9-]+/gi,
-    '-',
-  )
+  const safeTeamOne = match.teamOne.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'team1'
+  const safeTeamTwo = match.teamTwo.replace(/[^a-z0-9-]+/gi, '-').replace(/^-+|-+$/g, '') || 'team2'
+  const filename = `${safeTeamOne}-vs-${safeTeamTwo}-scorecard.png`
   void deliverFile({
     filename,
     content: dataUrl,

@@ -3,6 +3,7 @@ import { withTransaction } from '../localDatabase.ts'
 
 export const SETTING_KEYS = {
   LAST_SUCCESSFUL_DRIVE_BACKUP_AT: 'lastSuccessfulDriveBackupAt',
+  AUTO_BACKUP_ENABLED: 'autoBackupEnabled',
 } as const
 
 export const settingsRepository = {
@@ -43,6 +44,22 @@ export const settingsRepository = {
    */
   async setLastSuccessfulDriveBackupAt(timestamp: string): Promise<void> {
     return this.setSetting<string>(SETTING_KEYS.LAST_SUCCESSFUL_DRIVE_BACKUP_AT, timestamp)
+  },
+
+  /**
+   * Retrieves whether automatic 7-day Google Drive backup is enabled.
+   * Defaults to true if not explicitly set.
+   */
+  async isAutoBackupEnabled(): Promise<boolean> {
+    const val = await this.getSetting<boolean>(SETTING_KEYS.AUTO_BACKUP_ENABLED)
+    return val ?? true
+  },
+
+  /**
+   * Updates automatic 7-day Google Drive backup toggle state.
+   */
+  async setAutoBackupEnabled(enabled: boolean): Promise<void> {
+    return this.setSetting<boolean>(SETTING_KEYS.AUTO_BACKUP_ENABLED, enabled)
   },
 
   /**

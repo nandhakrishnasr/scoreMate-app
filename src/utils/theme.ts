@@ -1,4 +1,4 @@
-import { THEME_KEY } from '../services/storageService'
+import { THEME_KEY } from '../services/storageService.ts'
 
 export type Theme = 'dark' | 'light'
 

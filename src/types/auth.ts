@@ -26,20 +26,46 @@ export interface CredentialCollisionInfo {
 export function formatFirebaseUser(user: User | null, isOfflineGuest = false): AuthUser | null {
   if (!user) {
     if (isOfflineGuest) {
+      let savedDisplayName = 'Guest Player'
+      let savedPhotoURL: string | null = null
+      if (typeof localStorage !== 'undefined') {
+        try {
+          const raw = localStorage.getItem('scoremate-offline-guest-profile')
+          if (raw) {
+            const parsed = JSON.parse(raw)
+            if (parsed.displayName) savedDisplayName = parsed.displayName
+            if (parsed.photoURL !== undefined) savedPhotoURL = parsed.photoURL
+          }
+        } catch {
+          // ignore corrupted local storage
+        }
+      }
       return {
         uid: null,
         firebaseUid: null,
         email: null,
         emailVerified: false,
         phoneNumber: null,
-        displayName: 'Guest (Offline)',
-        photoURL: null,
+        displayName: savedDisplayName,
+        photoURL: savedPhotoURL,
         isAnonymous: true,
         isOfflineGuest: true,
         providerIds: ['anonymous'],
       }
     }
     return null
+  }
+
+  let photo = user.photoURL
+  if (typeof localStorage !== 'undefined') {
+    try {
+      const localAvatar = localStorage.getItem(`scoremate_avatar_${user.uid}`)
+      if (localAvatar) {
+        photo = localAvatar
+      }
+    } catch {
+      // ignore local storage read errors
+    }
   }
 
   return {
@@ -49,7 +75,7 @@ export function formatFirebaseUser(user: User | null, isOfflineGuest = false): A
     emailVerified: user.emailVerified,
     phoneNumber: user.phoneNumber,
     displayName: user.displayName,
-    photoURL: user.photoURL,
+    photoURL: photo,
     isAnonymous: user.isAnonymous,
     isOfflineGuest: false,
     providerIds: user.providerData.map((p) => p.providerId),

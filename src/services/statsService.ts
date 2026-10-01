@@ -458,6 +458,23 @@ export function aggregatePlayerStats(matches: CompletedMatch[]): PlayerStat[] {
 
     for (const innings of [match.firstInningsScore, match.secondInningsScore]) {
       if (!innings) continue
+      const totalBowlerWickets = innings.bowlerStats.reduce((sum, b) => sum + (b.wickets ?? 0), 0)
+      if (totalBowlerWickets === 0) {
+        for (const batter of innings.battingStats) {
+          if (!batter.out || !batter.dismissal) continue
+          const dismissal = batter.dismissal.trim()
+          if (/^run\s+out/i.test(dismissal)) continue
+          const bowlerMatch = dismissal.match(/\bb\s+([A-Za-z0-9\s._'-]+)$/i)
+          if (bowlerMatch) {
+            const bowlerName = bowlerMatch[1].trim()
+            if (bowlerName) {
+              const record = records.get(bowlerName) ?? createEmptyPlayerStat(bowlerName)
+              record.wickets += 1
+              records.set(bowlerName, record)
+            }
+          }
+        }
+      }
       for (const batter of innings.battingStats) {
         if (!batter.out || !batter.dismissal) continue
         const dismissal = batter.dismissal.trim()

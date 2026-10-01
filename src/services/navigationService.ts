@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Phase 8 — Navigation Service
  *
  * Pure navigation policy functions. No React, no DOM dependencies.
@@ -22,7 +22,7 @@ import type { Screen } from '../types/match'
  *   live         — handled as the "active match" case (leave-confirmation)
  *   innings-break — forward-only checkpoint; Back exits the app on Android or
  *                   is a noop in the browser.
- *   login, setup, history, teams, players — root screens, no parent.
+ *   login, setup, history, teams, players, profile — root screens, no parent.
  */
 export const PARENT_SCREENS: Partial<Record<Screen, Screen>> = {
   'match-options': 'setup',
