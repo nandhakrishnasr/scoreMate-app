@@ -44,3 +44,8 @@ The iOS project must then be signed with an Apple Developer team in Xcode before
 - Score 0 through 6, wides, no-balls, byes, leg-byes, and wickets.
 - Track score, wickets, overs, current run rate, batter figures, bowler figures, and undo.
 - Use the bottom navigation to start another match or view match history.
+
+## Support & Sponsor
+
+If you find ScoreMate useful, you can sponsor development via [GitHub Sponsors](https://github.com/sponsors/nandhakrishnasr) or check [.github/FUNDING.yml](.github/FUNDING.yml) for supported funding platforms.
+
