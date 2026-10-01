@@ -1,0 +1,44 @@
+{
+  "name": "scoremate",
+  "description": "ScoreMate — Street cricket, scored cleanly. Track every run, wicket, and over with ease.",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/*.test.ts",
+    "dev": "vite",
+    "build": "tsc -b && vite build",
+    "mobile:sync": "npm run build && npx cap sync",
+    "android:open": "npm run mobile:sync && npx cap open android",
+    "android:build": "npm run mobile:sync && cd android && gradlew.bat assembleDebug",
+    "ios:open": "npm run mobile:sync && npx cap open ios",
+    "ios:build": "npm run mobile:sync && npx cap build ios",
+    "lint": "oxlint",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@capacitor-firebase/authentication": "^8.5.1",
+    "@capacitor/android": "^8.5.1",
+    "@capacitor/app": "^8.1.1",
+    "@capacitor/cli": "^8.5.1",
+    "@capacitor/core": "^8.5.1",
+    "@capacitor/filesystem": "^8.1.3",
+    "@capacitor/ios": "^8.5.1",
+    "@capacitor/share": "^8.0.2",
+    "firebase": "^12.19.0",
+    "jspdf": "^4.2.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8",
+    "recharts": "^3.10.1"
+  },
+  "devDependencies": {
+    "@types/node": "^24.13.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "@vitejs/plugin-react": "^6.1.0",
+    "fake-indexeddb": "^6.2.5",
+    "oxlint": "^1.79.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.2"
+  }
+}

@@ -1,0 +1,63 @@
+﻿# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Dependencies and builds
+node_modules
+dist
+dist-ssr
+*.local
+
+# Environment and secrets
+.env*
+!.env.example
+google-services.json
+GoogleService-Info.plist
+
+# Android keystore, signing properties, and package builds
+key.properties
+android/key.properties
+*.jks
+*.keystore
+*.apk
+*.aab
+ScoreMate-*.apk
+artifacts/mobile/*.apk
+
+# Database backups, dumps, and exports
+full_database_export.json
+gully-scorer-backup.json
+cricket-scorer-db*
+scorer_db/
+export_cricket_db.py
+*.db
+
+# Python virtual environment
+.venv/
+
+# Scratch, temporary logs, test scripts, and screenshots
+scratch/
+scratch_logcat.txt
+scratch-test-stats.cjs
+*Pasted Image*
+
+# Redundant icon folders (canonical icons reside in public/icons)
+cricket-app-icons/
+cricket-apps-icons/
+cricket-icons/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
