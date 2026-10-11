@@ -46,7 +46,9 @@ export function ScorecardInnings({
             {Math.floor(score.balls / 6)}.{score.balls % 6} ov
           </small>
         </span>
-        <span className="accordion-chevron">{expanded ? '⌃' : '⌄'}</span>
+        <span className="accordion-chevron" aria-hidden="true">
+          {expanded ? '▲' : '▼'}
+        </span>
       </button>
       {expanded && (
         <div className="accordion-scorecard-body">
