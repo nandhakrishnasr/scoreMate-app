@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import Icon from '../components/Icon'
 import { Header } from '../components/common/Header'
 import { PlayerRow } from '../components/common/PlayerRow'
@@ -6,9 +6,11 @@ import { SelectionSheet } from '../components/common/SelectionSheet'
 import { ScoringSheet } from '../components/scoring/ScoringSheet'
 import { ConfirmModal } from '../components/modals/ConfirmModal'
 import { ShotTrackerModal } from '../components/scoring/ShotTrackerModal'
+import { LiveShareModal } from '../components/modals/LiveShareModal'
 import { countMaidens } from '../services/exportService'
 import { useMatch } from '../context/MatchContext'
-import type { ScoreState, Screen, SquadPlayer, CricketFieldZone, PitchDeliveryLength } from '../types/match'
+import { createLiveBroadcastChannel } from '../services/liveShareService'
+import type { ScoreState, Screen, SquadPlayer, CricketFieldZone, PitchDeliveryLength, LiveMatchSnapshot } from '../types/match'
 
 export interface LiveScreenProps {
   score: ScoreState
@@ -86,6 +88,29 @@ export function LiveScreen({
     runs: number
     label?: string
   } | null>(null)
+  const [shareLiveOpen, setShareLiveOpen] = useState(false)
+
+  const currentSnapshot = useMemo<LiveMatchSnapshot>(() => {
+    return {
+      version: 1,
+      id: `${teamOne}-${teamTwo}-${overs}`,
+      teamOne,
+      teamTwo,
+      overs,
+      inningsNumber,
+      firstBattingHome,
+      score,
+      firstInningsScore: null,
+      target,
+      timestamp: new Date().toISOString(),
+    }
+  }, [teamOne, teamTwo, overs, inningsNumber, firstBattingHome, score, target])
+
+  useEffect(() => {
+    const channel = createLiveBroadcastChannel()
+    channel.broadcast(currentSnapshot)
+    return () => channel.close()
+  }, [currentSnapshot])
 
   function handleScoreRuns(run: number, label?: string) {
     if (trackShots) {
@@ -234,7 +259,16 @@ export function LiveScreen({
             </button>
           )}
         </section>
-        <div className="tracker-toggle-row">
+        <div className="live-actions-toolbar">
+          <button
+            type="button"
+            className="live-broadcast-btn"
+            onClick={() => setShareLiveOpen(true)}
+            title="Share live match link with spectators"
+          >
+            <span className="live-pulse-dot" />
+            <span>🔴 Live Stream</span>
+          </button>
           <button
             type="button"
             className={`tracker-toggle-pill ${trackShots ? 'active' : ''}`}
@@ -247,7 +281,7 @@ export function LiveScreen({
             }}
             title="Toggle interactive shot placement popup on each ball"
           >
-            🎯 Shot &amp; Pitch Tracker: <strong>{trackShots ? 'MANUAL' : 'AUTO'}</strong>
+            🎯 Shot Map: <strong>{trackShots ? 'MANUAL' : 'AUTO'}</strong>
           </button>
         </div>
         <section className="scoring-panel">
@@ -429,6 +463,13 @@ export function LiveScreen({
               )
               setPendingShot(null)
             }}
+          />
+        )}
+        {shareLiveOpen && (
+          <LiveShareModal
+            isOpen={shareLiveOpen}
+            onClose={() => setShareLiveOpen(false)}
+            snapshot={currentSnapshot}
           />
         )}
       </main>

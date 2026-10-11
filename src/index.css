@@ -4585,8 +4585,287 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   padding: 12px;
 }
 
+/* ==========================================================================
+   Phase 4: Live Match Sharing & Viewer Mode
+   ========================================================================== */
 
+/* Live Actions Toolbar in Scoring Screen */
+.live-actions-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
 
+.live-broadcast-btn {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.2) 0%, rgba(220, 38, 38, 0.1) 100%);
+  border: 1px solid rgba(239, 68, 68, 0.45);
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
 
+.live-broadcast-btn:hover {
+  background: linear-gradient(135deg, rgba(239, 68, 68, 0.35) 0%, rgba(220, 38, 38, 0.2) 100%);
+  border-color: rgba(239, 68, 68, 0.7);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(239, 68, 68, 0.3);
+}
 
+.live-broadcast-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.18);
+  border: 1px solid rgba(239, 68, 68, 0.4);
+  padding: 3px 9px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #f87171;
+  letter-spacing: 0.05em;
+}
+
+.live-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #ef4444;
+  box-shadow: 0 0 8px #ef4444;
+  animation: pulseLive 1.5s infinite;
+}
+
+@keyframes pulseLive {
+  0% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7); }
+  70% { transform: scale(1.15); box-shadow: 0 0 0 6px rgba(239, 68, 68, 0); }
+  100% { transform: scale(0.95); box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); }
+}
+
+/* Live Share Modal */
+.live-share-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.75);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 14px;
+}
+
+.live-share-container {
+  background: var(--surface-sheet, #0f172a);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 20px;
+  width: 100%;
+  max-width: 440px;
+  padding: 20px;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.live-share-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.live-share-header h3 {
+  margin: 4px 0 2px;
+  font-size: 18px;
+  color: #fff;
+}
+
+.live-share-sub {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  margin: 0;
+}
+
+.live-share-preview-card {
+  background: rgba(15, 23, 42, 0.7);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 14px;
+  padding: 14px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.preview-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.live-preview-tag {
+  font-size: 10px;
+  font-weight: 700;
+  color: #34d399;
+}
+
+.preview-top small {
+  font-size: 10px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.preview-score-box {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+}
+
+.preview-score {
+  font-size: 26px;
+  font-weight: 900;
+  color: #fff;
+  font-family: 'Space Grotesk', sans-serif;
+}
+
+.preview-overs {
+  font-size: 14px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.preview-crease {
+  display: flex;
+  justify-content: space-between;
+  font-size: 11px;
+  color: var(--text-muted, #cbd5e1);
+  border-top: 1px solid rgba(255, 255, 255, 0.08);
+  padding-top: 6px;
+}
+
+.live-url-box {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.35);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  padding: 4px;
+}
+
+.live-url-input {
+  flex: 1;
+  background: transparent;
+  border: none;
+  color: #e2e8f0;
+  font-size: 11px;
+  padding: 6px 8px;
+  outline: none;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.live-url-input.full-width {
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 8px;
+  padding: 10px;
+  color: #fff;
+  width: 100%;
+}
+
+.copy-url-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #fff;
+  font-size: 11px;
+  font-weight: 700;
+  padding: 6px 12px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
+}
+
+.copy-url-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.copy-url-btn.copied {
+  background: #10b981;
+  border-color: #10b981;
+  color: #fff;
+}
+
+.live-share-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.live-broadcast-share-btn {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(239, 68, 68, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.live-broadcast-share-btn:hover {
+  box-shadow: 0 6px 22px rgba(239, 68, 68, 0.45);
+}
+
+.live-share-hint {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+  line-height: 1.4;
+  text-align: center;
+  margin: 0;
+}
+
+/* Viewer Screen */
+.live-viewer-shell {
+  min-height: 100vh;
+}
+
+.viewer-content {
+  padding-bottom: 40px;
+}
+
+.viewer-live-banner {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 12px;
+  background: rgba(239, 68, 68, 0.08);
+  border: 1px solid rgba(239, 68, 68, 0.25);
+  border-radius: 12px;
+  margin-bottom: 12px;
+}
+
+.viewer-last-time {
+  font-size: 10.5px;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 500;
+}
+
+.viewer-score-card {
+  border: 1.5px solid rgba(239, 68, 68, 0.35);
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.8) 0%, rgba(15, 23, 42, 0.9) 100%);
+}
+
+.viewer-actions-row {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
 

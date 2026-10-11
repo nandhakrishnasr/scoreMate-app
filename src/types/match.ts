@@ -119,7 +119,23 @@ export type ScoreState = {
   bowlerStats: BowlerStats[]
   ballTracking?: BallTrackRecord[]
 }
-export type Screen = 'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players' | 'profile'
+export type Screen = 'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players' | 'profile' | 'viewer'
+
+export interface LiveMatchSnapshot {
+  version: 1
+  id: string
+  teamOne: string
+  teamTwo: string
+  overs: number
+  inningsNumber: 1 | 2
+  firstBattingHome: boolean
+  venue?: string
+  competition?: string
+  score: ScoreState
+  firstInningsScore: ScoreState | null
+  target: number | null
+  timestamp: string
+}
 export type BallKind = 'runs' | 'wide' | 'noBall' | 'bye' | 'legBye' | 'wicket'
 export type ScoringModal = 'runs' | 'wide' | 'noBall' | 'bye' | 'legBye' | 'wicket' | null
 export type WicketDetails = {

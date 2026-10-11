@@ -18,6 +18,9 @@ import { PlayersStatsScreen } from './screens/PlayersStatsScreen'
 import { ProfileScreen } from './screens/ProfileScreen'
 import { ScorecardScreen } from './screens/ScorecardScreen'
 import { ResultScreen } from './screens/ResultScreen'
+import { LiveViewerScreen } from './screens/LiveViewerScreen'
+import { decodeLiveMatchFromUrl } from './services/liveShareService'
+import type { LiveMatchSnapshot } from './types/match'
 import { MatchProvider, useMatchState } from './context/MatchContext'
 import { SettingsContext } from './context/SettingsContext'
 import { NavigationContext } from './context/NavigationContext'
@@ -252,6 +255,27 @@ function AppContent() {
     }
   }, [loading, status, screen, matchState.recoveredScreen, score, setScreen])
 
+  const [viewerSnapshot, setViewerSnapshot] = useState<LiveMatchSnapshot | null>(() => {
+    return decodeLiveMatchFromUrl()
+  })
+
+  useEffect(() => {
+    const handleUrlChange = () => {
+      const snap = decodeLiveMatchFromUrl()
+      if (snap) {
+        setViewerSnapshot(snap)
+        setScreen('viewer')
+      }
+    }
+
+    if (viewerSnapshot) {
+      setScreen('viewer')
+    }
+
+    window.addEventListener('hashchange', handleUrlChange)
+    return () => window.removeEventListener('hashchange', handleUrlChange)
+  }, [viewerSnapshot, setScreen])
+
   // Non-blocking best-effort 7-day automatic backup check on startup (Phase 6)
   useEffect(() => {
     if (!loading && status === 'authenticated') {
@@ -484,6 +508,18 @@ function AppContent() {
             }}
           />
         ),
+        viewer: viewerSnapshot ? (
+          <LiveViewerScreen
+            initialSnapshot={viewerSnapshot}
+            onExit={() => {
+              if (typeof window !== 'undefined' && window.location.hash.startsWith('#live=')) {
+                window.history.replaceState(null, '', window.location.pathname)
+              }
+              setViewerSnapshot(null)
+              setScreen(score ? 'live' : 'setup')
+            }}
+          />
+        ) : setupRoute,
       }}
     />
   )
