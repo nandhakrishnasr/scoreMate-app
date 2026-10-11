@@ -29,6 +29,7 @@ export function SetupScreen(props: SetupScreenProps) {
   const [coinResult, setCoinResult] = useState<'Heads' | 'Tails' | null>(null)
   const [coinFlipping, setCoinFlipping] = useState(false)
   const [targetFace, setTargetFace] = useState<'Heads' | 'Tails'>('Heads')
+  const [flipCount, setFlipCount] = useState(0)
   const [tossMessage, setTossMessage] = useState('')
 
   function flipCoin() {
@@ -41,6 +42,7 @@ export function SetupScreen(props: SetupScreenProps) {
     const result = Math.random() < 0.5 ? 'Heads' : 'Tails'
     setTargetFace(result)
     setCoinFlipping(true)
+    setFlipCount((prev) => prev + 1)
     window.setTimeout(() => {
       setCoinResult(result)
       props.setTossWinner(
@@ -124,7 +126,7 @@ export function SetupScreen(props: SetupScreenProps) {
               disabled={coinFlipping}
               title="Tap to flip coin"
             >
-              <div className="coin-3d-inner">
+              <div className="coin-3d-inner" key={flipCount}>
                 <div className="coin-side coin-heads">
                   <img src={coinHeads} alt="Heads" />
                 </div>

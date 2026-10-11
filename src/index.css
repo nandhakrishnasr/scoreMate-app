@@ -590,6 +590,7 @@ button { cursor: pointer; }
   outline: none;
   transition: transform 0.2s ease;
   flex-shrink: 0;
+  filter: drop-shadow(0 8px 18px rgba(217, 119, 6, 0.45));
 }
 
 .coin-3d-wrapper:hover:not(:disabled) {
@@ -605,9 +606,9 @@ button { cursor: pointer; }
   width: 100%;
   height: 100%;
   transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   border-radius: 50%;
   transition: transform 0.4s ease;
-  filter: drop-shadow(0 8px 18px rgba(217, 119, 6, 0.45));
 }
 
 .coin-side {
@@ -619,7 +620,8 @@ button { cursor: pointer; }
   border-radius: 50%;
   backface-visibility: hidden;
   -webkit-backface-visibility: hidden;
-  overflow: hidden;
+  transform-style: preserve-3d;
+  -webkit-transform-style: preserve-3d;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -635,11 +637,11 @@ button { cursor: pointer; }
 }
 
 .coin-side.coin-heads {
-  transform: rotateY(0deg);
+  transform: rotateY(0deg) translateZ(1px);
 }
 
 .coin-side.coin-tails {
-  transform: rotateY(180deg);
+  transform: rotateY(180deg) translateZ(1px);
 }
 
 /* Static resting states */
@@ -647,8 +649,38 @@ button { cursor: pointer; }
   transform: rotateY(0deg);
 }
 
+.coin-3d-wrapper.heads .coin-side.coin-heads {
+  opacity: 1;
+  visibility: visible;
+  z-index: 2;
+}
+
+.coin-3d-wrapper.heads .coin-side.coin-tails {
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+}
+
 .coin-3d-wrapper.tails .coin-3d-inner {
   transform: rotateY(180deg);
+}
+
+.coin-3d-wrapper.tails .coin-side.coin-heads {
+  opacity: 0;
+  visibility: hidden;
+  z-index: 1;
+}
+
+.coin-3d-wrapper.tails .coin-side.coin-tails {
+  opacity: 1;
+  visibility: visible;
+  z-index: 2;
+}
+
+/* While flipping, both faces are rendered in 3D */
+.coin-3d-wrapper[class*="flipping-to"] .coin-side {
+  opacity: 1 !important;
+  visibility: visible !important;
 }
 
 /* 3D Spin animations */
