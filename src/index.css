@@ -4192,6 +4192,400 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   margin-top: 4px;
 }
 
+/* ==========================================================================
+   Phase 3: Player Career & Team Head-to-Head Analytics
+   ========================================================================== */
+
+/* Team Head-to-Head Card */
+.team-h2h-card {
+  margin: 14px 0;
+  padding: 16px;
+  background: linear-gradient(180deg, rgba(30, 41, 59, 0.7) 0%, rgba(15, 23, 42, 0.85) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 18px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.35);
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.h2h-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.h2h-team-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.h2h-team-badge.align-right {
+  align-items: flex-end;
+}
+
+.h2h-team-badge strong {
+  font-size: 15px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.h2h-win-count {
+  font-size: 11px;
+  color: #34d399;
+  font-weight: 700;
+}
+
+.h2h-vs-center {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+}
+
+.h2h-vs-center strong {
+  font-size: 14px;
+  font-weight: 900;
+  color: var(--accent, #f59e0b);
+  letter-spacing: 0.1em;
+}
+
+.h2h-vs-center small {
+  font-size: 9.5px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.h2h-ratio-bar-wrap {
+  display: flex;
+  height: 20px;
+  width: 100%;
+  border-radius: 999px;
+  overflow: hidden;
+  background: rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.h2h-ratio-bar {
+  display: flex;
+  align-items: center;
+  padding: 0 8px;
+  font-size: 10px;
+  font-weight: 800;
+  color: #fff;
+  transition: width 0.4s ease;
+}
+
+.h2h-ratio-bar.a-side {
+  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  justify-content: flex-start;
+}
+
+.h2h-ratio-bar.b-side {
+  background: linear-gradient(90deg, #6366f1 0%, #4f46e5 100%);
+  justify-content: flex-end;
+}
+
+.h2h-stats-grid {
+  display: grid;
+  grid-template-columns: 1fr 1.3fr 1fr;
+  gap: 6px;
+  margin-top: 4px;
+  align-items: center;
+}
+
+.h2h-stat-box {
+  background: rgba(15, 23, 42, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  padding: 8px 6px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.h2h-stat-box span {
+  font-size: 9.5px;
+  color: var(--text-muted, #94a3b8);
+  font-weight: 600;
+}
+
+.h2h-stat-box b {
+  font-size: 14px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.h2h-form-pills {
+  display: flex;
+  justify-content: center;
+  gap: 4px;
+  margin-top: 2px;
+}
+
+.form-pill {
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 9.5px;
+  font-weight: 800;
+  color: #fff;
+}
+
+.form-pill.win { background: #10b981; }
+.form-pill.loss { background: #ef4444; }
+.form-pill.draw { background: #f59e0b; }
+
+.h2h-empty-state {
+  padding: 12px;
+  text-align: center;
+  color: var(--text-muted, #94a3b8);
+  font-size: 12px;
+}
+
+/* Player Career Analytics & Milestones */
+.player-career-analytics {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-top: 10px;
+}
+
+.milestones-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.milestone-badges-row {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+}
+
+.milestone-badge-card {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 12px;
+  border-radius: 12px;
+  background: rgba(30, 41, 59, 0.5);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  transition: all 0.2s ease;
+}
+
+.milestone-badge-card.earned {
+  background: linear-gradient(135deg, rgba(245, 158, 11, 0.15) 0%, rgba(217, 119, 6, 0.1) 100%);
+  border-color: rgba(245, 158, 11, 0.4);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.15);
+}
+
+.milestone-badge-card.locked {
+  opacity: 0.55;
+  filter: grayscale(60%);
+}
+
+.badge-icon {
+  font-size: 18px;
+}
+
+.badge-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+}
+
+.badge-meta strong {
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  white-space: nowrap;
+}
+
+.badge-meta small {
+  font-size: 9.5px;
+  color: var(--text-muted, #94a3b8);
+  white-space: nowrap;
+}
+
+.career-sub-tabs {
+  display: flex;
+  gap: 6px;
+  background: rgba(0, 0, 0, 0.25);
+  padding: 3px;
+  border-radius: 10px;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.sub-tab-btn {
+  flex: 1;
+  padding: 7px 10px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: var(--text-muted, #94a3b8);
+  font-size: 11px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.sub-tab-btn.active {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+/* Opponent Cards in Player Profile */
+.opponents-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opponent-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.opp-card-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.opp-card-head strong {
+  font-size: 13px;
+  font-weight: 700;
+  color: #fff;
+}
+
+.opp-card-head span {
+  font-size: 11px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.opp-stats-row {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 4px;
+}
+
+.opp-metric {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 6px;
+  padding: 4px 2px;
+}
+
+.opp-metric span {
+  font-size: 8.5px;
+  color: var(--text-muted, #94a3b8);
+  text-transform: uppercase;
+}
+
+.opp-metric b {
+  font-size: 11px;
+  color: #fff;
+  font-weight: 700;
+}
+
+/* Match Logs in Player Profile */
+.match-logs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-log-card {
+  background: rgba(15, 23, 42, 0.6);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.log-top strong {
+  display: block;
+  font-size: 13px;
+  color: #fff;
+}
+
+.log-top small {
+  font-size: 10px;
+  color: var(--text-muted, #94a3b8);
+}
+
+.log-result-tag {
+  font-size: 10px;
+  font-weight: 700;
+  padding: 2px 8px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  color: var(--text-muted, #cbd5e1);
+}
+
+.log-pills {
+  display: flex;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.perf-pill {
+  font-size: 11px;
+  padding: 4px 8px;
+  border-radius: 8px;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.perf-pill.bat {
+  background: rgba(16, 185, 129, 0.15);
+  border: 1px solid rgba(16, 185, 129, 0.3);
+  color: #34d399;
+}
+
+.perf-pill.bowl {
+  background: rgba(56, 189, 248, 0.15);
+  border: 1px solid rgba(56, 189, 248, 0.3);
+  color: #38bdf8;
+}
+
+.perf-pill.muted {
+  background: rgba(255, 255, 255, 0.05);
+  color: var(--text-muted, #94a3b8);
+}
+
+.empty-subtext {
+  font-size: 12px;
+  color: var(--text-muted, #94a3b8);
+  text-align: center;
+  padding: 12px;
+}
+
+
 
 
 

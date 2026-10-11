@@ -7,6 +7,7 @@ import { loadTeamImages, saveTeamImages } from '../services/storageService'
 import { aggregateTeamStats, getInitials } from '../services/statsService'
 import { useTeamStats } from '../hooks/useDatabaseStats'
 import { filterTeams } from '../utils/search'
+import { TeamH2HComparison } from '../components/analytics/TeamH2HComparison'
 
 export interface TeamsScreenProps {
   matches: CompletedMatch[]
@@ -217,6 +218,13 @@ export function TeamsScreen({ matches, stats: propStats, setScreen }: TeamsScree
                   ))}
                 </select>
               </div>
+              {selectedOpponent && (
+                <TeamH2HComparison
+                  teamA={selectedTeamStat.name}
+                  teamB={selectedOpponent}
+                  matches={matches}
+                />
+              )}
               <div className="team-match-list">
                 <span className="section-kicker">
                   {selectedOpponent

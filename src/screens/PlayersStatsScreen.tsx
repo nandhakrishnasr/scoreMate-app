@@ -7,7 +7,7 @@ import { loadPlayerImages, savePlayerImages } from '../services/storageService'
 import { aggregatePlayerStats, getInitials } from '../services/statsService'
 import { usePlayerStats } from '../hooks/useDatabaseStats'
 import { filterPlayers } from '../utils/search'
-
+import { PlayerH2HView } from '../components/analytics/PlayerH2HView'
 
 export interface PlayersStatsScreenProps {
   matches: CompletedMatch[]
@@ -25,7 +25,7 @@ export function PlayersStatsScreen({
   const localPlayerStats = aggregatePlayerStats(matches)
   const playerStats = localPlayerStats.length > 0 ? localPlayerStats : stats
   const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null)
-  const [activeStatTab, setActiveStatTab] = useState<'batting' | 'bowling' | 'fielding'>('batting')
+  const [activeStatTab, setActiveStatTab] = useState<'batting' | 'bowling' | 'fielding' | 'career'>('batting')
   const [playerImages, setPlayerImages] = useState<Record<string, string>>(loadPlayerImages())
   const [search, setSearch] = useState('')
   const player = playerStats.find((entry) => entry.name === selectedPlayer) ?? null
@@ -160,7 +160,20 @@ export function PlayersStatsScreen({
                 >
                   Fielding
                 </button>
+                <button
+                  className={activeStatTab === 'career' ? 'active' : ''}
+                  onClick={() => setActiveStatTab('career')}
+                >
+                  📊 Career &amp; H2H
+                </button>
               </div>
+              {activeStatTab === 'career' && (
+                <PlayerH2HView
+                  playerName={player.name}
+                  playerStat={player}
+                  matches={matches}
+                />
+              )}
               {activeStatTab === 'batting' && (
                 <div className="player-stat-detail-grid">
                   <div>

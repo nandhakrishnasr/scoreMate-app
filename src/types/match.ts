@@ -142,6 +142,8 @@ export type CompletedMatch = {
   playerOfMatch?: PlayerOfMatch
   venue?: string
   competition?: string
+  homePlayers?: SquadPlayer[]
+  visitorPlayers?: SquadPlayer[]
 }
 export type TeamStat = { name: string; played: number; wins: number; losses: number; draws: number }
 export type PlayerStat = {
