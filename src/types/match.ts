@@ -66,6 +66,38 @@ export type BowlerStats = {
   noBalls?: number
   dotBalls?: number
 }
+export type CricketFieldZone =
+  | 'fine_leg'
+  | 'square_leg'
+  | 'mid_wicket'
+  | 'long_on'
+  | 'long_off'
+  | 'cover'
+  | 'point'
+  | 'third_man'
+
+export type PitchDeliveryLength =
+  | 'yorker'
+  | 'full'
+  | 'good_length'
+  | 'short'
+  | 'bouncer'
+
+export interface BallTrackRecord {
+  ballNumber: number
+  overNumber: number
+  ballInOver: number
+  batterName: string
+  bowlerName: string
+  runs: number
+  batterRuns: number
+  isBoundary: boolean
+  isWicket: boolean
+  zone?: CricketFieldZone
+  length?: PitchDeliveryLength
+  timestamp: string
+}
+
 export type ScoreState = {
   runs: number
   wickets: number
@@ -85,6 +117,7 @@ export type ScoreState = {
   inningsComplete: boolean
   battingStats: Player[]
   bowlerStats: BowlerStats[]
+  ballTracking?: BallTrackRecord[]
 }
 export type Screen = 'login' | 'setup' | 'opening' | 'match-options' | 'roster' | 'opening-select' | 'innings-break' | 'second-opening' | 'live' | 'scorecard' | 'result' | 'history' | 'teams' | 'players' | 'profile'
 export type BallKind = 'runs' | 'wide' | 'noBall' | 'bye' | 'legBye' | 'wicket'

@@ -9,6 +9,7 @@ import { exportMatchImage } from '../services/canvasService'
 import { filterMatches } from '../utils/search'
 import { deliverFile } from '../utils/fileDelivery'
 import { Capacitor } from '@capacitor/core'
+import { PosterModal } from '../components/modals/PosterModal'
 
 export interface HistoryScreenProps {
   matches: CompletedMatch[]
@@ -35,6 +36,7 @@ export function HistoryScreen({
   setScreen,
 }: HistoryScreenProps) {
   const [search, setSearch] = useState('')
+  const [posterMatch, setPosterMatch] = useState<CompletedMatch | null>(null)
   const orderedMatches = [...matches].sort((first, second) => {
     const firstTime = Date.parse(first.savedAt)
     const secondTime = Date.parse(second.savedAt)
@@ -134,13 +136,17 @@ export function HistoryScreen({
                   </p>
                 </div>
                 <div className="history-match-actions">
+                  <button onClick={() => setPosterMatch(match)} title="Share Social Media Poster">
+                    <Icon name="image" />
+                    Poster
+                  </button>
                   <button onClick={() => exportMatchCsv(match)}>
                     <Icon name="file-spreadsheet" />
                     CSV
                   </button>
                   <button onClick={() => exportMatchImage(match)}>
                     <Icon name="image" />
-                    Image
+                    Scorecard
                   </button>
                 </div>
               </section>
@@ -149,6 +155,20 @@ export function HistoryScreen({
         )}
       </main>
       <BottomNav active="history" setScreen={setScreen} />
+
+      {posterMatch && (
+        <PosterModal
+          isOpen={Boolean(posterMatch)}
+          onClose={() => setPosterMatch(null)}
+          result={posterMatch.result}
+          teamOne={posterMatch.teamOne}
+          teamTwo={posterMatch.teamTwo}
+          firstBattingHome={posterMatch.firstBattingHome}
+          firstInningsScore={posterMatch.firstInningsScore}
+          score={posterMatch.secondInningsScore}
+          venue={posterMatch.venue}
+        />
+      )}
     </div>
   )
 }

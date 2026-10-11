@@ -4,7 +4,7 @@ import Icon from '../Icon'
 import { NavigationContext } from '../../context/NavigationContext.ts'
 import { AuthContext } from '../../context/AuthContext'
 import { firebaseAuth } from '../../services/firebase.ts'
-import { syncService, type SyncState } from '../../services/syncService.ts'
+import { syncService, type SyncState, type SyncDetails } from '../../services/syncService.ts'
 import { getInitials } from '../../services/imageService.ts'
 import { formatFirebaseUser, type AuthUser } from '../../types/auth.ts'
 import { isOfflineGuestActive } from '../../services/authService.ts'
@@ -31,6 +31,7 @@ export function Header({
   const navigate = useContext(NavigationContext)
   const authContext = useContext(AuthContext)
   const [syncState, setSyncState] = useState<SyncState>(syncService.getSyncState())
+  const [syncDetails, setSyncDetails] = useState<SyncDetails>(() => syncService.getSyncDetails())
   const [localAuthUser, setLocalAuthUser] = useState<AuthUser | null>(() => {
     if (firebaseAuth.currentUser) {
       return formatFirebaseUser(firebaseAuth.currentUser)
@@ -51,8 +52,9 @@ export function Header({
         setLocalAuthUser(null)
       }
     })
-    const unsubSync = syncService.subscribeSyncState((state) => {
+    const unsubSync = syncService.subscribeSyncState((state, details) => {
       setSyncState(state)
+      setSyncDetails(details)
     })
     return () => {
       unsubAuth()
@@ -96,8 +98,17 @@ export function Header({
           <button
             type="button"
             className={`sync-indicator-btn sync-${syncState}`}
-            onClick={() => void syncService.syncAll()}
-            title={`Cloud sync: ${syncState}. Tap to sync now.`}
+            onClick={() => {
+              if (syncState === 'error' && syncDetails.lastError) {
+                console.error('[SyncIndicator] Last sync error:', syncDetails.lastError)
+              }
+              void syncService.syncAll()
+            }}
+            title={
+              syncState === 'error' && syncDetails.lastError
+                ? `Sync error: ${syncDetails.lastError}. Tap to retry.`
+                : `Cloud sync: ${syncState}. Tap to sync now.`
+            }
             aria-label={`Sync state: ${syncState}`}
           >
             <span className={`sync-dot sync-dot-${syncState}`} />

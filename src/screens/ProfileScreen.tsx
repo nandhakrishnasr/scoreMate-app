@@ -87,6 +87,10 @@ export function ProfileScreen({ setScreen, openSettings: propOpenSettings, onRel
 
     if (googleDriveService.isConnected()) {
       void googleDriveService.findBackupFile().catch(() => {})
+    } else {
+      void googleDriveService.authorize(false).then(() => {
+        if (active) setDriveConnected(true)
+      }).catch(() => {})
     }
     return () => {
       active = false

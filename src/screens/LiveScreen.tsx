@@ -1,12 +1,14 @@
+import { useState } from 'react'
 import Icon from '../components/Icon'
 import { Header } from '../components/common/Header'
 import { PlayerRow } from '../components/common/PlayerRow'
 import { SelectionSheet } from '../components/common/SelectionSheet'
 import { ScoringSheet } from '../components/scoring/ScoringSheet'
 import { ConfirmModal } from '../components/modals/ConfirmModal'
+import { ShotTrackerModal } from '../components/scoring/ShotTrackerModal'
 import { countMaidens } from '../services/exportService'
 import { useMatch } from '../context/MatchContext'
-import type { ScoreState, Screen, SquadPlayer } from '../types/match'
+import type { ScoreState, Screen, SquadPlayer, CricketFieldZone, PitchDeliveryLength } from '../types/match'
 
 export interface LiveScreenProps {
   score: ScoreState
@@ -72,6 +74,26 @@ export function LiveScreen({
   onRetryFinishMatch,
 }: LiveScreenProps) {
   const { scoring } = useMatch()
+
+  const [trackShots, setTrackShots] = useState(() => {
+    try {
+      return localStorage.getItem('scoreMate_track_shots') === 'true'
+    } catch {
+      return false
+    }
+  })
+  const [pendingShot, setPendingShot] = useState<{
+    runs: number
+    label?: string
+  } | null>(null)
+
+  function handleScoreRuns(run: number, label?: string) {
+    if (trackShots) {
+      setPendingShot({ runs: run, label })
+    } else {
+      scoring.addBall('runs', run, label)
+    }
+  }
 
   const inningsOver = score.balls >= maxBalls || score.inningsComplete
   const battingTeam =
@@ -212,6 +234,22 @@ export function LiveScreen({
             </button>
           )}
         </section>
+        <div className="tracker-toggle-row">
+          <button
+            type="button"
+            className={`tracker-toggle-pill ${trackShots ? 'active' : ''}`}
+            onClick={() => {
+              const next = !trackShots
+              setTrackShots(next)
+              try {
+                localStorage.setItem('scoreMate_track_shots', String(next))
+              } catch {}
+            }}
+            title="Toggle interactive shot placement popup on each ball"
+          >
+            🎯 Shot &amp; Pitch Tracker: <strong>{trackShots ? 'MANUAL' : 'AUTO'}</strong>
+          </button>
+        </div>
         <section className="scoring-panel">
           <div className="action-column">
             <button onClick={scoring.undo}>
@@ -242,20 +280,20 @@ export function LiveScreen({
             {[0, 1, 2, 3].map((run) => (
               <button
                 key={run}
-                onClick={() => scoring.addBall('runs', run)}
+                onClick={() => handleScoreRuns(run)}
                 disabled={inningsOver}
               >
                 {run}
               </button>
             ))}
             <button
-              onClick={() => scoring.addBall('runs', 4, '4')}
+              onClick={() => handleScoreRuns(4, '4')}
               disabled={inningsOver}
             >
               {score.freeHit ? '4 FH' : '4'}
             </button>
             <button
-              onClick={() => scoring.addBall('runs', 6, '6')}
+              onClick={() => handleScoreRuns(6, '6')}
               disabled={inningsOver}
             >
               {score.freeHit ? '6 FH' : '6'}
@@ -367,6 +405,30 @@ export function LiveScreen({
               availableBowlers.length ? availableBowlers : bowlingRoster
             }
             onSelect={scoring.chooseNextBowler}
+          />
+        )}
+        {pendingShot && (
+          <ShotTrackerModal
+            isOpen={Boolean(pendingShot)}
+            runs={pendingShot.runs}
+            isBoundary={pendingShot.runs === 4 || pendingShot.runs === 6}
+            isWicket={false}
+            batterName={score.striker.name}
+            bowlerName={score.bowler.name}
+            onClose={() => {
+              scoring.addBall('runs', pendingShot.runs, pendingShot.label)
+              setPendingShot(null)
+            }}
+            onSelect={(zone: CricketFieldZone, length: PitchDeliveryLength) => {
+              scoring.addBall(
+                'runs',
+                pendingShot.runs,
+                pendingShot.label,
+                undefined,
+                { zone, length }
+              )
+              setPendingShot(null)
+            }}
           />
         )}
       </main>

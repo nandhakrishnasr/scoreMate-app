@@ -1,5 +1,6 @@
 import { Header } from '../components/common/Header'
 import { ScorecardInnings } from '../components/scorecard/ScorecardInnings'
+import { InningsCharts } from '../components/scoring/InningsCharts'
 import type { ScoreState } from '../types/match'
 
 export interface ScorecardScreenProps {
@@ -39,6 +40,12 @@ export function ScorecardScreen({
             </section>
           )}
         </>
+        <InningsCharts
+          firstInningsScore={firstInningsScore || score}
+          secondInningsScore={firstInningsScore && firstInningsScore !== score ? score : null}
+          firstTeam={firstInningsScore && firstInningsScore !== score ? firstTeamName : currentTeamName}
+          secondTeam={firstInningsScore && firstInningsScore !== score ? currentTeamName : firstTeamName}
+        />
       </main>
     </div>
   )

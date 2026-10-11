@@ -4,6 +4,7 @@ import { Choice } from '../components/common/Choice'
 import { FieldLabel } from '../components/common/FieldLabel'
 import { Header } from '../components/common/Header'
 import { validatePlayerName, validateSquadsReady } from '../utils/validation'
+import { getPreviousSquadForTeam } from '../services/squadService'
 import type { Screen, SquadPlayer } from '../types/match'
 
 export interface PlayersScreenProps {
@@ -36,6 +37,12 @@ export function PlayersScreen(props: PlayersScreenProps) {
   const [playerDraft, setPlayerDraft] = useState('')
   const [playerHand, setPlayerHand] = useState<'Right' | 'Left'>('Right')
   const [playerMessage, setPlayerMessage] = useState('')
+  const [isPulling, setIsPulling] = useState<'home' | 'visitor' | null>(null)
+  const [squadNotice, setSquadNotice] = useState<{
+    team: 'home' | 'visitor'
+    type: 'success' | 'info'
+    text: string
+  } | null>(null)
 
   function handleBeginInnings() {
     const homeTeam = props.teamOne || 'Host Team'
@@ -121,6 +128,72 @@ export function PlayersScreen(props: PlayersScreenProps) {
     if (removedName === props.openingBowler) props.setOpeningBowler('')
   }
 
+  async function handlePullPreviousSquad(team: 'home' | 'visitor', rawName: string) {
+    const teamName = rawName.trim()
+    if (!teamName) {
+      setPlayerMessage('Please enter a team name before pulling players.')
+      return
+    }
+
+    const currentSquad = team === 'home' ? props.homePlayers : props.visitorPlayers
+    const opposingSquad = team === 'home' ? props.visitorPlayers : props.homePlayers
+
+    if (currentSquad.length > 0) {
+      const confirmed =
+        typeof window === 'undefined' || typeof window.confirm !== 'function'
+          ? true
+          : window.confirm(
+              `Replace current ${currentSquad.length} player(s) in ${teamName} with previous squad?`
+            )
+      if (!confirmed) return
+    }
+
+    setIsPulling(team)
+    setSquadNotice(null)
+    setPlayerMessage('')
+
+    try {
+      const result = await getPreviousSquadForTeam(teamName, opposingSquad, teamLimit)
+      if (result.players.length > 0) {
+        const updateSquad = team === 'home' ? props.setHomePlayers : props.setVisitorPlayers
+        updateSquad(result.players)
+
+        // Clear openings if previously assigned batter/bowler was replaced
+        const validNames = new Set(result.players.map((p) => p.name))
+        if (props.openingStriker && !validNames.has(props.openingStriker)) {
+          props.setOpeningStriker('')
+        }
+        if (props.openingNonStriker && !validNames.has(props.openingNonStriker)) {
+          props.setOpeningNonStriker('')
+        }
+        if (props.openingBowler && !validNames.has(props.openingBowler)) {
+          props.setOpeningBowler('')
+        }
+
+        setSquadNotice({
+          team,
+          type: 'success',
+          text: result.message || `Loaded ${result.players.length} players for ${teamName}.`,
+        })
+      } else {
+        setSquadNotice({
+          team,
+          type: 'info',
+          text: result.message || `No previous players found for "${teamName}".`,
+        })
+      }
+    } catch (err) {
+      console.warn('Failed to pull squad:', err)
+      setSquadNotice({
+        team,
+        type: 'info',
+        text: `Could not retrieve previous players for "${teamName}".`,
+      })
+    } finally {
+      setIsPulling(null)
+    }
+  }
+
   const renderTeam = (
     team: 'home' | 'visitor',
     name: string,
@@ -161,6 +234,23 @@ export function PlayersScreen(props: PlayersScreenProps) {
             {players.length}/{teamLimit}
           </span>
         </div>
+        <div className="squad-toolbar">
+          <button
+            type="button"
+            className="pull-squad-btn"
+            onClick={() => handlePullPreviousSquad(team, name)}
+            disabled={!name.trim() || isPulling === team}
+            aria-label={`Pull previous players for ${name || (team === 'home' ? 'Home Team' : 'Visitor Team')}`}
+          >
+            <Icon name="history" size={14} />
+            {isPulling === team ? 'Pulling players…' : 'Pull previous squad'}
+          </button>
+        </div>
+        {squadNotice && squadNotice.team === team && (
+          <div className={`squad-notice ${squadNotice.type}`} role="status">
+            <span>{squadNotice.text}</span>
+          </div>
+        )}
         <div className="player-list">
           {players.map((player, index) => (
             <div className="squad-player" key={`${player.name}-${index}`}>

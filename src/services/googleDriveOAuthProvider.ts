@@ -191,8 +191,12 @@ export class UnsupportedPlatformOAuthProvider implements OAuthTokenProvider {
   }
 }
 
+let singletonNativeAndroidProvider: NativeAndroidOAuthProvider | null = null
+let singletonGisProvider: GisOAuthProvider | null = null
+
 /**
  * Factory for selecting the appropriate OAuthTokenProvider for the current runtime environment.
+ * Uses singleton caching for the default provider so in-memory token state is preserved across screen navigations.
  * - Android Native -> NativeAndroidOAuthProvider
  * - iOS Native     -> UnsupportedPlatformOAuthProvider
  * - Web / PWA      -> GisOAuthProvider
@@ -201,16 +205,37 @@ export function createDefaultOAuthTokenProvider(platformOverride?: {
   platform?: string
   isNative?: boolean
 }): OAuthTokenProvider {
-  const platform = platformOverride?.platform ?? Capacitor.getPlatform()
-  const isNative = platformOverride?.isNative ?? Capacitor.isNativePlatform()
+  if (platformOverride) {
+    const platform = platformOverride.platform ?? Capacitor.getPlatform()
+    const isNative = platformOverride.isNative ?? Capacitor.isNativePlatform()
+
+    if (isNative && platform === 'android') {
+      return new NativeAndroidOAuthProvider()
+    }
+
+    if (isNative && platform === 'ios') {
+      return new UnsupportedPlatformOAuthProvider('iOS')
+    }
+
+    return new GisOAuthProvider()
+  }
+
+  const platform = Capacitor.getPlatform()
+  const isNative = Capacitor.isNativePlatform()
 
   if (isNative && platform === 'android') {
-    return new NativeAndroidOAuthProvider()
+    if (!singletonNativeAndroidProvider) {
+      singletonNativeAndroidProvider = new NativeAndroidOAuthProvider()
+    }
+    return singletonNativeAndroidProvider
   }
 
   if (isNative && platform === 'ios') {
     return new UnsupportedPlatformOAuthProvider('iOS')
   }
 
-  return new GisOAuthProvider()
+  if (!singletonGisProvider) {
+    singletonGisProvider = new GisOAuthProvider()
+  }
+  return singletonGisProvider
 }

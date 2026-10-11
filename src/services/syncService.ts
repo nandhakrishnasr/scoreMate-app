@@ -326,12 +326,15 @@ export const syncService = {
         retryAttempts = 0
         setSyncState('synced')
       } else {
-        setSyncState('error', result.errors.join('; '))
+        const errorMsg = result.errors.join('; ')
+        console.error('[SyncService] Cloud sync error:', errorMsg)
+        setSyncState('error', errorMsg)
         this._scheduleRetry()
       }
     } catch (err) {
       if (thisGeneration !== syncGeneration) return result
       const msg = err instanceof Error ? err.message : String(err)
+      console.error('[SyncService] Cloud sync failed:', err)
       result.errors.push(msg)
       setSyncState('error', msg)
       this._scheduleRetry()

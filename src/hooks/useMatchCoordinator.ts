@@ -8,6 +8,7 @@ import { generateUUID } from '../utils/uuid'
 import { firebaseAuth } from '../services/firebase'
 import { syncService } from '../services/syncService.ts'
 import type { PersistedMatchRecord } from '../types/database.ts'
+import { persistSquadToRepositories } from '../services/squadService'
 import type { MatchState } from '../context/MatchContext'
 import type { CompletedMatch, MatchResult, ScoreState } from '../types/match'
 import { validateTeamMatchup, validateOpeningSelection } from '../utils/validation'
@@ -365,6 +366,8 @@ export function useMatchCoordinator(matchState: MatchState) {
     void (async () => {
       try {
         await matchRepository.saveMatch(completedRecord)
+        void persistSquadToRepositories(teamOne, homePlayers, completedRecord.ownerUid)
+        void persistSquadToRepositories(teamTwo, visitorPlayers, completedRecord.ownerUid)
         // Cancel any queued debounce write before clearing matchId so the
         // MatchContext cleanup cannot overwrite the completed record.
         flushPending()

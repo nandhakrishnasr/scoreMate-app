@@ -24,6 +24,8 @@ export const DRIVE_UPLOAD_FILES_URL = 'https://www.googleapis.com/upload/drive/v
 export const TOKEN_EXPIRY_BUFFER_MS = 120 * 1000 // 2 minutes buffer
 
 import { createDefaultOAuthTokenProvider } from './googleDriveOAuthProvider.ts'
+import { GoogleAuthProvider, signInWithPopup } from 'firebase/auth'
+import { firebaseAuth, isFirebaseConfigured } from './firebase.ts'
 
 
 export type GoogleDriveErrorCode =
@@ -199,53 +201,51 @@ export class GisOAuthProvider implements OAuthTokenProvider {
   private async getGisAdapter(): Promise<GisGlobalAdapter> {
     if (this.gisAdapter) return this.gisAdapter
 
-    // Check browser window
-    const gWindow = globalThis as unknown as {
-      google?: {
-        accounts?: {
-          oauth2?: {
-            initTokenClient: (config: GisTokenClientConfig) => GisTokenClient
-            revoke: (accessToken: string, done: () => void) => void
+    const checkWindow = () => {
+      const gWindow = globalThis as unknown as {
+        google?: {
+          accounts?: {
+            oauth2?: {
+              initTokenClient: (config: GisTokenClientConfig) => GisTokenClient
+              revoke: (accessToken: string, done: () => void) => void
+            }
           }
         }
       }
+      return gWindow.google?.accounts?.oauth2
     }
 
-    if (gWindow.google?.accounts?.oauth2) {
-      return gWindow.google.accounts.oauth2
+    const immediate = checkWindow()
+    if (immediate) return immediate
+
+    if (typeof document === 'undefined') {
+      throw new GoogleDriveError(
+        'OAUTH_INITIALIZATION_FAILED',
+        'Google Identity Services is not available in the current environment.'
+      )
     }
 
-    // Attempt to load script dynamically in browser
-    if (typeof document !== 'undefined') {
-      await new Promise<void>((resolve, reject) => {
-        const existing = document.querySelector('script[src="https://accounts.google.com/gsi/client"]')
-        if (existing) {
-          existing.addEventListener('load', () => resolve())
-          existing.addEventListener('error', () =>
-            reject(new GoogleDriveError('OAUTH_INITIALIZATION_FAILED', 'Failed to load Google Identity Services script.'))
-          )
-          if (gWindow.google?.accounts?.oauth2) resolve()
-          return
-        }
+    // Ensure script element exists in DOM
+    let script = document.querySelector<HTMLScriptElement>('script[src="https://accounts.google.com/gsi/client"]')
+    if (!script) {
+      script = document.createElement('script')
+      script.src = 'https://accounts.google.com/gsi/client'
+      script.async = true
+      script.defer = true
+      document.head.appendChild(script)
+    }
 
-        const script = document.createElement('script')
-        script.src = 'https://accounts.google.com/gsi/client'
-        script.async = true
-        script.defer = true
-        script.onload = () => resolve()
-        script.onerror = () =>
-          reject(new GoogleDriveError('OAUTH_INITIALIZATION_FAILED', 'Failed to load Google Identity Services script.'))
-        document.head.appendChild(script)
-      })
-
-      if (gWindow.google?.accounts?.oauth2) {
-        return gWindow.google.accounts.oauth2
-      }
+    // Poll for oauth2 object with a timeout (up to 3000ms)
+    const startTime = Date.now()
+    while (Date.now() - startTime < 3000) {
+      const adapter = checkWindow()
+      if (adapter) return adapter
+      await new Promise((r) => setTimeout(r, 50))
     }
 
     throw new GoogleDriveError(
       'OAUTH_INITIALIZATION_FAILED',
-      'Google Identity Services is not available in the current environment.'
+      'Failed to load Google Identity Services script.'
     )
   }
 
@@ -262,10 +262,46 @@ export class GisOAuthProvider implements OAuthTokenProvider {
       return this.inMemoryToken!
     }
 
-    const adapter = await this.getGisAdapter()
+    let adapter: GisGlobalAdapter | null = null
+    try {
+      adapter = await this.getGisAdapter()
+    } catch (gisErr) {
+      // If GIS fails to initialize in interactive mode on Web, fallback to Firebase Google Auth popup
+      if (interactive && isFirebaseConfigured()) {
+        return this.requestTokenViaFirebaseAuth(interactive)
+      }
+      throw gisErr
+    }
 
     return new Promise<OAuthToken>((resolve, reject) => {
       let settled = false
+
+      const cleanup = () => {
+        if (typeof window !== 'undefined') {
+          window.removeEventListener('focus', onFocusCheck)
+        }
+      }
+
+      // Check on window refocus after popup might have been closed by user
+      const onFocusCheck = () => {
+        if (!interactive || settled) return
+        setTimeout(() => {
+          if (!settled && !this.inMemoryToken) {
+            settled = true
+            cleanup()
+            reject(
+              new GoogleDriveError(
+                'OAUTH_CANCELLED',
+                'Google Drive authorization was cancelled.'
+              )
+            )
+          }
+        }, 1200)
+      }
+
+      if (typeof window !== 'undefined' && interactive) {
+        window.addEventListener('focus', onFocusCheck, { once: true })
+      }
 
       const tokenClient = adapter.initTokenClient({
         client_id: this.clientId,
@@ -273,6 +309,7 @@ export class GisOAuthProvider implements OAuthTokenProvider {
         callback: (resp: GisTokenResponse) => {
           if (settled) return
           settled = true
+          cleanup()
 
           if (resp.error) {
             if (resp.error === 'access_denied') {
@@ -315,7 +352,17 @@ export class GisOAuthProvider implements OAuthTokenProvider {
         error_callback: (err: unknown) => {
           if (settled) return
           settled = true
-          reject(new GoogleDriveError('OAUTH_AUTHORIZATION_REQUIRED', 'OAuth request encountered an error.', undefined, err))
+          cleanup()
+
+          const rawMsg = err && typeof err === 'object' && 'message' in err ? String(err.message) : String(err)
+          const lower = rawMsg.toLowerCase()
+          if (lower.includes('popup_closed') || lower.includes('cancel') || lower.includes('closed')) {
+            reject(new GoogleDriveError('OAUTH_CANCELLED', 'Google Drive authorization was cancelled.'))
+          } else if (interactive && isFirebaseConfigured()) {
+            this.requestTokenViaFirebaseAuth(interactive).then(resolve).catch(reject)
+          } else {
+            reject(new GoogleDriveError('OAUTH_AUTHORIZATION_REQUIRED', rawMsg || 'OAuth request encountered an error.', undefined, err))
+          }
         },
       })
 
@@ -325,19 +372,93 @@ export class GisOAuthProvider implements OAuthTokenProvider {
     })
   }
 
-  async revokeToken(token: string): Promise<void> {
-    const adapter = await this.getGisAdapter()
-    return new Promise<void>((resolve, reject) => {
-      try {
-        adapter.revoke(token, () => {
-          this.clearToken()
-          resolve()
-        })
-      } catch (err) {
-        this.clearToken()
-        reject(new GoogleDriveError('REVOCATION_FAILED', 'Failed to revoke Google authorization.', undefined, err))
+  /**
+   * Seamless Web fallback for Google Drive access token using Firebase Auth popup.
+   * Matches the native Android experience on web environments where GIS origin or popups are restricted.
+   */
+  private async requestTokenViaFirebaseAuth(interactive = false): Promise<OAuthToken> {
+    try {
+      const provider = new GoogleAuthProvider()
+      provider.addScope(this.scope)
+      if (interactive) {
+        provider.setCustomParameters({ prompt: 'consent' })
       }
-    })
+      const userCredential = await signInWithPopup(firebaseAuth, provider)
+      const credential = GoogleAuthProvider.credentialFromResult(userCredential)
+      const accessToken = credential?.accessToken
+
+      if (!accessToken) {
+        throw new GoogleDriveError(
+          'OAUTH_AUTHORIZATION_REQUIRED',
+          'No access token received from Google.'
+        )
+      }
+
+      const token: OAuthToken = {
+        accessToken,
+        expiresAt: Date.now() + 3600 * 1000,
+        scope: this.scope,
+      }
+      this.inMemoryToken = token
+      return token
+    } catch (err: unknown) {
+      const code = (err as { code?: string })?.code || ''
+      const msg = (err as { message?: string })?.message || String(err)
+      const lower = msg.toLowerCase()
+
+      if (
+        code === 'auth/popup-closed-by-user' ||
+        code === 'auth/cancelled-popup-request' ||
+        lower.includes('cancel') ||
+        lower.includes('closed')
+      ) {
+        throw new GoogleDriveError(
+          'OAUTH_CANCELLED',
+          'Google Drive authorization was cancelled.'
+        )
+      }
+
+      if (code === 'auth/network-request-failed' || lower.includes('network') || lower.includes('offline')) {
+        throw new GoogleDriveError(
+          'NETWORK_ERROR',
+          'Network error connecting to Google services.',
+          undefined,
+          err
+        )
+      }
+
+      throw new GoogleDriveError(
+        'OAUTH_AUTHORIZATION_REQUIRED',
+        msg || 'Failed to authorize Google Drive.',
+        undefined,
+        err
+      )
+    }
+  }
+
+  async revokeToken(token: string): Promise<void> {
+    this.clearToken()
+    if (!token) return
+
+    try {
+      const adapter = await this.getGisAdapter()
+      await new Promise<void>((resolve, reject) => {
+        try {
+          adapter.revoke(token, () => resolve())
+        } catch (err) {
+          reject(err)
+        }
+      })
+    } catch {
+      try {
+        await fetch(`https://oauth2.googleapis.com/revoke?token=${encodeURIComponent(token)}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+        })
+      } catch {
+        // Local token is already cleared
+      }
+    }
   }
 }
 

@@ -10,6 +10,9 @@ import type {
   WicketDetails,
   WicketEvent,
   WicketType,
+  BallTrackRecord,
+  CricketFieldZone,
+  PitchDeliveryLength,
 } from '../types/match'
 import {
   emptyExtras,
@@ -43,7 +46,10 @@ export function useScoring(options: UseScoringOptions) {
   const [scoringModal, setScoringModal] = useState<Exclude<import('../types/match').ScoringModal, null> | null>(null)
   const [wicketDetails, setWicketDetails] = useState<WicketDetails | null>(null)
 
-  function addDelivery(input: DeliveryInput) {
+  function addDelivery(
+    input: DeliveryInput,
+    ballTrack?: { zone?: CricketFieldZone; length?: PitchDeliveryLength },
+  ) {
     const score = options.score
     if (!score || score.balls >= options.maxBalls || score.inningsComplete || nextBatterOpen || nextBowlerOpen) return
 
@@ -58,6 +64,33 @@ export function useScoring(options: UseScoringOptions) {
     })
 
     const updated = result.nextState
+
+    // Track ball placement for Wagon Wheel & Pitch Heatmap
+    const defaultZone: CricketFieldZone =
+      input.batterRuns === 6
+        ? 'long_on'
+        : input.batterRuns === 4
+          ? 'cover'
+          : input.batterRuns > 0
+            ? 'mid_wicket'
+            : 'cover'
+
+    const trackRecord: BallTrackRecord = {
+      ballNumber: updated.balls,
+      overNumber: Math.floor(score.balls / 6) + 1,
+      ballInOver: (score.balls % 6) + 1,
+      batterName: score.striker.name,
+      bowlerName: score.bowler.name,
+      runs: input.completedRuns + input.batterRuns + (input.extras.wides || 0) + (input.extras.noBalls || 0),
+      batterRuns: input.batterRuns,
+      isBoundary: input.batterRuns === 4 || input.batterRuns === 6,
+      isWicket: Boolean(input.wicket),
+      zone: ballTrack?.zone || defaultZone,
+      length: ballTrack?.length || 'good_length',
+      timestamp: new Date().toISOString(),
+    }
+    updated.ballTracking = [...(score.ballTracking ?? []), trackRecord]
+
     options.setScore(updated)
 
     if (result.wicketOccurred && !result.inningsComplete) {
@@ -92,7 +125,13 @@ export function useScoring(options: UseScoringOptions) {
     }
   }
 
-  function addBall(kind: BallKind, value = 0, label?: string, wicket?: WicketDetails) {
+  function addBall(
+    kind: BallKind,
+    value = 0,
+    label?: string,
+    wicket?: WicketDetails,
+    ballTrack?: { zone?: CricketFieldZone; length?: PitchDeliveryLength },
+  ) {
     const score = options.score
     if (!score) return
 
@@ -167,7 +206,7 @@ export function useScoring(options: UseScoringOptions) {
       }
     }
 
-    addDelivery(input)
+    addDelivery(input, ballTrack)
   }
 
   function chooseNextBatter(name: string) {

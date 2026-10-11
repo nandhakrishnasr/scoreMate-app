@@ -19,7 +19,8 @@ export class FirestoreError extends Error {
   readonly cause?: unknown
 
   constructor(message: string, code?: string, cause?: unknown) {
-    super(message)
+    const detail = cause instanceof Error ? cause.message : cause ? String(cause) : ''
+    super(detail ? `${message}: ${detail}` : message)
     this.name = 'FirestoreError'
     this.code = code
     this.cause = cause
@@ -62,14 +63,15 @@ export function setFirestoreAdapter(adapter: FirestoreAdapter | null): void {
 
 /**
  * Strips local synchronization metadata prior to persisting into Firestore.
- * Keeps cloud document data strictly limited to canonical application state.
+ * Keeps cloud document data strictly limited to canonical application state
+ * and cleanses any undefined fields which Firestore rejects.
  */
 export function stripSyncMetadata<T extends Record<string, unknown>>(record: T): Record<string, unknown> {
   const { lastSyncedAt, syncStatus, syncError, ...canonical } = record as Record<string, unknown>
   void lastSyncedAt
   void syncStatus
   void syncError
-  return canonical
+  return JSON.parse(JSON.stringify(canonical)) as Record<string, unknown>
 }
 
 export const firestoreService = {

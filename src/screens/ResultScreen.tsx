@@ -3,6 +3,7 @@ import { Header } from '../components/common/Header'
 import { InningsCharts } from '../components/scoring/InningsCharts'
 import type { MatchResult, PlayerOfMatch, ScoreState } from '../types/match'
 import { downloadScorecard } from '../services/exportService'
+import { PosterModal } from '../components/modals/PosterModal'
 
 export interface ResultScreenProps {
   result: MatchResult
@@ -71,6 +72,7 @@ export function ResultScreen({
     )[0]
   const [selectedPlayer, setSelectedPlayer] = useState(manOfMatch?.name ?? '')
   const [playerOfMatchSaved, setPlayerOfMatchSaved] = useState(false)
+  const [showPosterModal, setShowPosterModal] = useState(false)
   const selectedPlayerData =
     playerCandidates.find((player) => player.name === selectedPlayer) ?? manOfMatch
 
@@ -177,6 +179,13 @@ export function ResultScreen({
           </section>
         )}
         <button
+          type="button"
+          className="secondary-button wide-button poster-trigger-btn"
+          onClick={() => setShowPosterModal(true)}
+        >
+          <span>🎨</span> Share Match Posters (Story/WhatsApp)
+        </button>
+        <button
           className="primary-button wide-button"
           onClick={handleDownloadScorecard}
         >
@@ -186,6 +195,26 @@ export function ResultScreen({
           New match <span>↗</span>
         </button>
       </main>
+
+      <PosterModal
+        isOpen={showPosterModal}
+        onClose={() => setShowPosterModal(false)}
+        result={result}
+        teamOne={teamOne}
+        teamTwo={teamTwo}
+        firstBattingHome={firstBattingHome}
+        firstInningsScore={firstInningsScore}
+        score={score}
+        playerOfMatch={
+          selectedPlayerData
+            ? {
+                name: selectedPlayerData.name,
+                team: selectedPlayerData.team,
+                reason: selectedPlayerData.reason,
+              }
+            : null
+        }
+      />
     </div>
   )
 }
