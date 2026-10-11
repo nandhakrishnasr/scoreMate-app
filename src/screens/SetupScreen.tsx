@@ -4,6 +4,8 @@ import { Choice } from '../components/common/Choice'
 import { FieldLabel } from '../components/common/FieldLabel'
 import { Header } from '../components/common/Header'
 import type { Screen } from '../types/match'
+import coinHeads from '../assets/coin-heads.png'
+import coinTails from '../assets/coin-tails.png'
 
 export interface SetupScreenProps {
   teamOne: string
@@ -26,6 +28,7 @@ export interface SetupScreenProps {
 export function SetupScreen(props: SetupScreenProps) {
   const [coinResult, setCoinResult] = useState<'Heads' | 'Tails' | null>(null)
   const [coinFlipping, setCoinFlipping] = useState(false)
+  const [targetFace, setTargetFace] = useState<'Heads' | 'Tails'>('Heads')
   const [tossMessage, setTossMessage] = useState('')
 
   function flipCoin() {
@@ -35,9 +38,10 @@ export function SetupScreen(props: SetupScreenProps) {
       return
     }
     setTossMessage('')
+    const result = Math.random() < 0.5 ? 'Heads' : 'Tails'
+    setTargetFace(result)
     setCoinFlipping(true)
     window.setTimeout(() => {
-      const result = Math.random() < 0.5 ? 'Heads' : 'Tails'
       setCoinResult(result)
       props.setTossWinner(
         result === props.tossCall
@@ -47,7 +51,7 @@ export function SetupScreen(props: SetupScreenProps) {
             : 'host',
       )
       setCoinFlipping(false)
-    }, 700)
+    }, 1100)
   }
 
   function updateTossCaller(caller: 'host' | 'visitor') {
@@ -113,13 +117,21 @@ export function SetupScreen(props: SetupScreenProps) {
               <h3>Call the toss</h3>
             </div>
             <button
-              className={`coin ${coinFlipping ? 'flipping' : ''}`}
+              type="button"
+              className={`coin-3d-wrapper ${coinFlipping ? `flipping-to-${targetFace.toLowerCase()}` : (coinResult ?? 'Heads').toLowerCase()}`}
               onClick={flipCoin}
               aria-label="Flip coin"
+              disabled={coinFlipping}
+              title="Tap to flip coin"
             >
-              <span className="coin-face">
-                {coinFlipping ? '?' : coinResult ?? 'Heads'}
-              </span>
+              <div className="coin-3d-inner">
+                <div className="coin-side coin-heads">
+                  <img src={coinHeads} alt="Heads" />
+                </div>
+                <div className="coin-side coin-tails">
+                  <img src={coinTails} alt="Tails" />
+                </div>
+              </div>
             </button>
           </div>
           <FieldLabel text="Who is calling?" />

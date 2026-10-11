@@ -306,6 +306,7 @@ export function SettingsModal({
                 disabled={isBusy}
                 style={{ fontSize: '11px', padding: '8px' }}
               >
+                <Icon name="shield" size={16} />
                 Privacy Policy
               </button>
               <button
@@ -315,6 +316,7 @@ export function SettingsModal({
                 disabled={isBusy}
                 style={{ fontSize: '11px', padding: '8px' }}
               >
+                <Icon name="document" size={16} />
                 Terms
               </button>
             </div>
