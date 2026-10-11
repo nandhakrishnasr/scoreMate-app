@@ -4,6 +4,7 @@ import type { LiveMatchSnapshot } from '../src/types/match.ts'
 import {
   encodeLiveMatchToUrl,
   decodeLiveMatchFromUrl,
+  shortenLiveUrl,
 } from '../src/services/liveShareService.ts'
 
 const sampleSnapshot: LiveMatchSnapshot = {
@@ -66,14 +67,16 @@ const sampleSnapshot: LiveMatchSnapshot = {
   },
 }
 
-test('encodeLiveMatchToUrl generates a valid hash URL', () => {
+test('encodeLiveMatchToUrl generates an ultra-compact hash URL', () => {
   const url = encodeLiveMatchToUrl(sampleSnapshot, 'https://scoremate.app/')
   assert.ok(url.startsWith('https://scoremate.app/#live='))
   const hashPart = url.split('#live=')[1]
   assert.ok(hashPart && hashPart.length > 20)
+  // Ensure the link is truly compact (less than 350 characters, over 90% reduction from 3000+)
+  assert.ok(url.length < 350, `URL length ${url.length} should be under 350 characters`)
 })
 
-test('decodeLiveMatchFromUrl decodes and recovers exact live match state', () => {
+test('decodeLiveMatchFromUrl decodes and recovers exact live match state from compact format', () => {
   const url = encodeLiveMatchToUrl(sampleSnapshot, 'https://scoremate.app/')
   const recovered = decodeLiveMatchFromUrl(url)
 
@@ -98,4 +101,21 @@ test('decodeLiveMatchFromUrl handles query parameters and raw hashes safely', ()
   // Malformed input returns null without crashing
   assert.equal(decodeLiveMatchFromUrl(''), null)
   assert.equal(decodeLiveMatchFromUrl('https://scoremate.app/#live=garbage123'), null)
+})
+
+test('decodeLiveMatchFromUrl backward compatibility with legacy full JSON format', () => {
+  const legacyJson = JSON.stringify(sampleSnapshot)
+  const legacyB64 = Buffer.from(legacyJson).toString('base64')
+  const legacyUrl = `https://scoremate.app/#live=${legacyB64}`
+
+  const recovered = decodeLiveMatchFromUrl(legacyUrl)
+  assert.ok(recovered)
+  assert.equal(recovered.teamOne, 'Royal Challengers')
+  assert.equal(recovered.score.runs, 142)
+})
+
+test('shortenLiveUrl handles short or empty inputs gracefully', async () => {
+  const alreadyShort = 'https://da.gd/abc'
+  assert.equal(await shortenLiveUrl(alreadyShort), alreadyShort)
+  assert.equal(await shortenLiveUrl(''), '')
 })

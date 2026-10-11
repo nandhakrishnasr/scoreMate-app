@@ -4802,6 +4802,47 @@ button:disabled { cursor: not-allowed; opacity: .45; }
   color: #fff;
 }
 
+.live-url-meta-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: -2px;
+  margin-bottom: 4px;
+}
+
+.live-url-length-pill {
+  font-size: 10.5px;
+  color: var(--text-muted, #94a3b8);
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.shorten-toggle-btn {
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: #f87171;
+  font-size: 11px;
+  font-weight: 600;
+  padding: 3px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.shorten-toggle-btn:hover:not(:disabled) {
+  background: rgba(239, 68, 68, 0.22);
+  color: #fca5a5;
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.shorten-toggle-btn:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
 .live-share-actions {
   display: flex;
   flex-direction: column;
