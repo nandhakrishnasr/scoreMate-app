@@ -3670,6 +3670,177 @@ button:disabled { cursor: not-allowed; opacity: .45; }
    Phase 2: Wagon Wheel, Pitch Heatmap & Shot Tracking
    ========================================================================== */
 
+/* Visual Match Analytics Container */
+.innings-charts {
+  margin-top: 18px;
+  background: var(--surface-card, #0e1726);
+  border: 1px solid var(--line, rgba(255, 255, 255, 0.08));
+  border-radius: 18px;
+  padding: 16px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.25);
+  transition: all 0.3s ease;
+}
+
+.innings-charts.is-collapsed {
+  padding-bottom: 14px;
+}
+
+.chart-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding-bottom: 4px;
+}
+
+.chart-title-group {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.chart-title-group .section-kicker {
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #10b981;
+  line-height: 1.2;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.chart-title-group .chart-main-title {
+  font-size: 16px;
+  font-weight: 700;
+  color: #f8fafc;
+  line-height: 1.25;
+  margin: 0;
+  padding: 0;
+  display: block;
+}
+
+.chart-heading-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.analytics-expand-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 12px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 10px;
+  color: #e2e8f0;
+  font-size: 11.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  user-select: none;
+}
+
+.analytics-expand-btn:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.22);
+  color: #fff;
+}
+
+.analytics-expand-chevron {
+  display: inline-block;
+  font-size: 9px;
+  transition: transform 0.2s ease;
+}
+
+.analytics-collapsible-body {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+/* Worm Chart Cards */
+.chart-card {
+  background: rgba(0, 0, 0, 0.25);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 14px;
+  padding: 14px 12px 10px;
+}
+
+.chart-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.chart-card-header span {
+  font-size: 12px;
+  font-weight: 600;
+  color: #94a3b8;
+}
+
+.chart-legend-inline {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.legend-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.legend-dot.team-1 {
+  background: var(--chart-line-1, #10b981);
+}
+
+.legend-dot.team-2 {
+  background: var(--chart-line-2, #38bdf8);
+  margin-left: 6px;
+}
+
+.chart-legend-inline small {
+  font-size: 11px;
+  color: #cbd5e1;
+  font-weight: 500;
+}
+
+/* Empty State Card */
+.analytics-empty-card {
+  padding: 28px 16px;
+  text-align: center;
+  background: rgba(0, 0, 0, 0.2);
+  border: 1px dashed rgba(255, 255, 255, 0.12);
+  border-radius: 14px;
+  margin-top: 6px;
+}
+
+.analytics-empty-icon {
+  font-size: 26px;
+  display: block;
+  margin-bottom: 8px;
+}
+
+.analytics-empty-card h4 {
+  font-size: 14px;
+  font-weight: 700;
+  color: #f1f5f9;
+  margin: 0 0 4px;
+}
+
+.analytics-empty-card p {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 0;
+  line-height: 1.4;
+}
+
 /* Analytics Tab Bar */
 .analytics-tab-bar {
   display: flex;
