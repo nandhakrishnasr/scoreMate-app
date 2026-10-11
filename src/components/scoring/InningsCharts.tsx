@@ -179,16 +179,15 @@ export function InningsCharts({
         </div>
 
         <div className="chart-heading-actions">
-          {/* Expand / Collapse Button */}
+          {/* Expand / Collapse Button (Icon-only) */}
           <button
             type="button"
-            className="analytics-expand-btn"
+            className="analytics-expand-btn icon-only"
             onClick={toggleExpand}
             aria-expanded={isExpanded}
             aria-label={isExpanded ? 'Collapse Analytics' : 'Expand Analytics'}
             title={isExpanded ? 'Collapse Analytics' : 'Expand Analytics'}
           >
-            <span>{isExpanded ? 'Collapse' : 'Expand'}</span>
             <span className={`analytics-expand-chevron ${isExpanded ? 'expanded' : ''}`}>
               {isExpanded ? '▲' : '▼'}
             </span>
